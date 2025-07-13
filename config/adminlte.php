@@ -359,7 +359,7 @@ return [
         ],
         [
             'text' => 'Configurações',
-            'url' => '#',
+            'url' => 'configs',
             'icon' => 'fas fa-fw fa-cog',
         ],
     ],

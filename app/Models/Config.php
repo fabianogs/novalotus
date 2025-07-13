@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Config extends Model
 {
@@ -36,4 +37,9 @@ class Config extends Model
         'arquivo_lgpd',
         'texto_lgpd'
     ];
+
+    public function unidade(): BelongsTo
+    {
+        return $this->belongsTo(Unidade::class);
+    }
 }
