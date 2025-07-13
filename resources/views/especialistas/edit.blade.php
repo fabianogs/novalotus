@@ -12,6 +12,26 @@
 @stop
 
 @section('content')
+    {{-- Avisos sobre registros necessários --}}
+    @if(!empty($warnings))
+        <div class="row mb-3">
+            <div class="col-12">
+                @foreach($warnings as $warning)
+                    <div class="alert alert-{{ $warning['type'] }} alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        <h5><i class="icon fas fa-exclamation-triangle"></i> Atenção!</h5>
+                        {{ $warning['message'] }}
+                        <div class="mt-2">
+                            <a href="{{ $warning['route'] }}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-plus"></i> {{ $warning['button_text'] }}
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">Informações do Especialista</h3>
@@ -58,41 +78,63 @@
                         <!-- Especialidade -->
                         <div class="form-group">
                             <label for="especialidade_id">Especialidade</label>
-                            <select class="form-control @error('especialidade_id') is-invalid @enderror" 
-                                    id="especialidade_id" 
-                                    name="especialidade_id">
-                                <option value="">Selecione uma especialidade</option>
-                                @foreach($especialidades as $especialidade)
-                                    <option value="{{ $especialidade->id }}" {{ old('especialidade_id', $especialista->especialidade_id) == $especialidade->id ? 'selected' : '' }}>
-                                        {{ $especialidade->nome }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <div class="d-flex">
+                                <select class="form-control @error('especialidade_id') is-invalid @enderror" 
+                                        id="especialidade_id" 
+                                        name="especialidade_id"
+                                        style="flex: 1;">
+                                    <option value="">Selecione uma especialidade</option>
+                                    @foreach($especialidades as $especialidade)
+                                        <option value="{{ $especialidade->id }}" {{ old('especialidade_id', $especialista->especialidade_id) == $especialidade->id ? 'selected' : '' }}>
+                                            {{ $especialidade->nome }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @if($especialidades->isEmpty())
+                                    <a href="{{ route('especialidades.create') }}" class="btn btn-warning btn-sm ml-2" target="_blank">
+                                        <i class="fas fa-plus"></i>
+                                    </a>
+                                @endif
+                            </div>
                             @error('especialidade_id')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
                                 </span>
                             @enderror
+                            @if($especialidades->isEmpty())
+                                <small class="text-muted">Nenhuma especialidade cadastrada. <a href="{{ route('especialidades.create') }}" target="_blank">Cadastre uma agora</a>.</small>
+                            @endif
                         </div>
 
                         <!-- Cidade -->
                         <div class="form-group">
                             <label for="cidade_id">Cidade</label>
-                            <select class="form-control @error('cidade_id') is-invalid @enderror" 
-                                    id="cidade_id" 
-                                    name="cidade_id">
-                                <option value="">Selecione uma cidade</option>
-                                @foreach($cidades as $cidade)
-                                    <option value="{{ $cidade->id }}" {{ old('cidade_id', $especialista->cidade_id) == $cidade->id ? 'selected' : '' }}>
-                                        {{ $cidade->nome }} - {{ $cidade->uf }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <div class="d-flex">
+                                <select class="form-control @error('cidade_id') is-invalid @enderror" 
+                                        id="cidade_id" 
+                                        name="cidade_id"
+                                        style="flex: 1;">
+                                    <option value="">Selecione uma cidade</option>
+                                    @foreach($cidades as $cidade)
+                                        <option value="{{ $cidade->id }}" {{ old('cidade_id', $especialista->cidade_id) == $cidade->id ? 'selected' : '' }}>
+                                            {{ $cidade->nome }} - {{ $cidade->uf }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @if($cidades->isEmpty())
+                                    <a href="{{ route('cidades.create') }}" class="btn btn-warning btn-sm ml-2" target="_blank">
+                                        <i class="fas fa-plus"></i>
+                                    </a>
+                                @endif
+                            </div>
                             @error('cidade_id')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
                                 </span>
                             @enderror
+                            @if($cidades->isEmpty())
+                                <small class="text-muted">Nenhuma cidade cadastrada. <a href="{{ route('cidades.create') }}" target="_blank">Cadastre uma agora</a>.</small>
+                            @endif
                         </div>
                     </div>
 
@@ -115,21 +157,32 @@
                         <!-- Necessidade -->
                         <div class="form-group">
                             <label for="necessidade_id">Necessidade</label>
-                            <select class="form-control @error('necessidade_id') is-invalid @enderror" 
-                                    id="necessidade_id" 
-                                    name="necessidade_id">
-                                <option value="">Selecione uma necessidade</option>
-                                @foreach($necessidades as $necessidade)
-                                    <option value="{{ $necessidade->id }}" {{ old('necessidade_id', $especialista->necessidade_id) == $necessidade->id ? 'selected' : '' }}>
-                                        {{ $necessidade->titulo }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <div class="d-flex">
+                                <select class="form-control @error('necessidade_id') is-invalid @enderror" 
+                                        id="necessidade_id" 
+                                        name="necessidade_id"
+                                        style="flex: 1;">
+                                    <option value="">Selecione uma necessidade</option>
+                                    @foreach($necessidades as $necessidade)
+                                        <option value="{{ $necessidade->id }}" {{ old('necessidade_id', $especialista->necessidade_id) == $necessidade->id ? 'selected' : '' }}>
+                                            {{ $necessidade->titulo }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @if($necessidades->isEmpty())
+                                    <a href="{{ route('necessidades.create') }}" class="btn btn-warning btn-sm ml-2" target="_blank">
+                                        <i class="fas fa-plus"></i>
+                                    </a>
+                                @endif
+                            </div>
                             @error('necessidade_id')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
                                 </span>
                             @enderror
+                            @if($necessidades->isEmpty())
+                                <small class="text-muted">Nenhuma necessidade cadastrada. <a href="{{ route('necessidades.create') }}" target="_blank">Cadastre uma agora</a>.</small>
+                            @endif
                         </div>
 
                         <!-- Foto Atual -->

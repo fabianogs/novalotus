@@ -33,7 +33,38 @@ class EspecialistaController extends Controller
         $cidades = Cidade::orderBy('nome', 'asc')->get();
         $necessidades = Necessidade::orderBy('titulo', 'asc')->get();
         
-        return view('especialistas.create', compact('especialidades', 'cidades', 'necessidades'));
+        // Verificar se existem registros necessários
+        $warnings = [];
+        $canCreate = true;
+        
+        if ($especialidades->isEmpty()) {
+            $warnings[] = [
+                'message' => 'Nenhuma especialidade encontrada. É recomendado cadastrar especialidades antes de criar especialistas.',
+                'type' => 'warning',
+                'route' => route('especialidades.create'),
+                'button_text' => 'Cadastrar Especialidade'
+            ];
+        }
+        
+        if ($cidades->isEmpty()) {
+            $warnings[] = [
+                'message' => 'Nenhuma cidade encontrada. É recomendado cadastrar cidades antes de criar especialistas.',
+                'type' => 'warning',
+                'route' => route('cidades.create'),
+                'button_text' => 'Cadastrar Cidade'
+            ];
+        }
+        
+        if ($necessidades->isEmpty()) {
+            $warnings[] = [
+                'message' => 'Nenhuma necessidade encontrada. É recomendado cadastrar necessidades antes de criar especialistas.',
+                'type' => 'warning',
+                'route' => route('necessidades.create'),
+                'button_text' => 'Cadastrar Necessidade'
+            ];
+        }
+        
+        return view('especialistas.create', compact('especialidades', 'cidades', 'necessidades', 'warnings', 'canCreate'));
     }
 
     /**
@@ -41,6 +72,12 @@ class EspecialistaController extends Controller
      */
     public function store(Request $request)
     {
+        // Validação customizada para campos relacionados
+        $customValidation = $this->validateRelatedFields($request);
+        if ($customValidation !== true) {
+            return back()->withInput()->withErrors($customValidation);
+        }
+        
         $request->validate([
             'nome' => 'required|string|max:255',
             'conselho' => 'nullable|string|max:255',
@@ -54,10 +91,10 @@ class EspecialistaController extends Controller
             'nome.string' => 'O nome deve ser um texto válido.',
             'nome.max' => 'O nome deve ter no máximo 255 caracteres.',
             'conselho.max' => 'O conselho deve ter no máximo 255 caracteres.',
-            'especialidade_id.exists' => 'A especialidade selecionada não é válida.',
-            'cidade_id.exists' => 'A cidade selecionada não é válida.',
+            'especialidade_id.exists' => 'A especialidade selecionada não existe. Verifique se ela não foi removida.',
+            'cidade_id.exists' => 'A cidade selecionada não existe. Verifique se ela não foi removida.',
             'endereco.max' => 'O endereço deve ter no máximo 500 caracteres.',
-            'necessidade_id.exists' => 'A necessidade selecionada não é válida.',
+            'necessidade_id.exists' => 'A necessidade selecionada não existe. Verifique se ela não foi removida.',
             'foto.image' => 'O arquivo deve ser uma imagem.',
             'foto.mimes' => 'A foto deve ser nos formatos: JPEG, PNG, JPG ou GIF.',
             'foto.max' => 'A foto deve ter no máximo 2MB.',
@@ -108,7 +145,38 @@ class EspecialistaController extends Controller
         $cidades = Cidade::orderBy('nome', 'asc')->get();
         $necessidades = Necessidade::orderBy('titulo', 'asc')->get();
         
-        return view('especialistas.edit', compact('especialista', 'especialidades', 'cidades', 'necessidades'));
+        // Verificar se existem registros necessários
+        $warnings = [];
+        $canEdit = true;
+        
+        if ($especialidades->isEmpty()) {
+            $warnings[] = [
+                'message' => 'Nenhuma especialidade encontrada. É recomendado cadastrar especialidades antes de editar especialistas.',
+                'type' => 'warning',
+                'route' => route('especialidades.create'),
+                'button_text' => 'Cadastrar Especialidade'
+            ];
+        }
+        
+        if ($cidades->isEmpty()) {
+            $warnings[] = [
+                'message' => 'Nenhuma cidade encontrada. É recomendado cadastrar cidades antes de editar especialistas.',
+                'type' => 'warning',
+                'route' => route('cidades.create'),
+                'button_text' => 'Cadastrar Cidade'
+            ];
+        }
+        
+        if ($necessidades->isEmpty()) {
+            $warnings[] = [
+                'message' => 'Nenhuma necessidade encontrada. É recomendado cadastrar necessidades antes de editar especialistas.',
+                'type' => 'warning',
+                'route' => route('necessidades.create'),
+                'button_text' => 'Cadastrar Necessidade'
+            ];
+        }
+        
+        return view('especialistas.edit', compact('especialista', 'especialidades', 'cidades', 'necessidades', 'warnings', 'canEdit'));
     }
 
     /**
@@ -116,6 +184,12 @@ class EspecialistaController extends Controller
      */
     public function update(Request $request, Especialista $especialista)
     {
+        // Validação customizada para campos relacionados
+        $customValidation = $this->validateRelatedFields($request);
+        if ($customValidation !== true) {
+            return back()->withInput()->withErrors($customValidation);
+        }
+        
         $request->validate([
             'nome' => 'required|string|max:255',
             'conselho' => 'nullable|string|max:255',
@@ -129,10 +203,10 @@ class EspecialistaController extends Controller
             'nome.string' => 'O nome deve ser um texto válido.',
             'nome.max' => 'O nome deve ter no máximo 255 caracteres.',
             'conselho.max' => 'O conselho deve ter no máximo 255 caracteres.',
-            'especialidade_id.exists' => 'A especialidade selecionada não é válida.',
-            'cidade_id.exists' => 'A cidade selecionada não é válida.',
+            'especialidade_id.exists' => 'A especialidade selecionada não existe. Verifique se ela não foi removida.',
+            'cidade_id.exists' => 'A cidade selecionada não existe. Verifique se ela não foi removida.',
             'endereco.max' => 'O endereço deve ter no máximo 500 caracteres.',
-            'necessidade_id.exists' => 'A necessidade selecionada não é válida.',
+            'necessidade_id.exists' => 'A necessidade selecionada não existe. Verifique se ela não foi removida.',
             'foto.image' => 'O arquivo deve ser uma imagem.',
             'foto.mimes' => 'A foto deve ser nos formatos: JPEG, PNG, JPG ou GIF.',
             'foto.max' => 'A foto deve ter no máximo 2MB.',
@@ -235,5 +309,39 @@ class EspecialistaController extends Controller
         }
 
         return $slug;
+    }
+
+    /**
+     * Validar campos relacionados de forma customizada
+     */
+    private function validateRelatedFields(Request $request)
+    {
+        $errors = [];
+
+        // Verificar se a especialidade existe e está disponível
+        if ($request->filled('especialidade_id')) {
+            $especialidade = Especialidade::find($request->especialidade_id);
+            if (!$especialidade) {
+                $errors['especialidade_id'] = 'A especialidade selecionada não foi encontrada. Pode ter sido removida por outro usuário.';
+            }
+        }
+
+        // Verificar se a cidade existe e está disponível
+        if ($request->filled('cidade_id')) {
+            $cidade = Cidade::find($request->cidade_id);
+            if (!$cidade) {
+                $errors['cidade_id'] = 'A cidade selecionada não foi encontrada. Pode ter sido removida por outro usuário.';
+            }
+        }
+
+        // Verificar se a necessidade existe e está disponível
+        if ($request->filled('necessidade_id')) {
+            $necessidade = Necessidade::find($request->necessidade_id);
+            if (!$necessidade) {
+                $errors['necessidade_id'] = 'A necessidade selecionada não foi encontrada. Pode ter sido removida por outro usuário.';
+            }
+        }
+
+        return empty($errors) ? true : $errors;
     }
 } 
