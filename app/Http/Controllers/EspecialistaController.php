@@ -1,0 +1,239 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Especialista;
+use App\Models\Especialidade;
+use App\Models\Cidade;
+use App\Models\Necessidade;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+
+class EspecialistaController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        $especialistas = Especialista::with(['especialidade', 'cidade', 'necessidade'])
+                                   ->orderBy('nome', 'asc')
+                                   ->get();
+        
+        return view('especialistas.index', compact('especialistas'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $especialidades = Especialidade::orderBy('nome', 'asc')->get();
+        $cidades = Cidade::orderBy('nome', 'asc')->get();
+        $necessidades = Necessidade::orderBy('titulo', 'asc')->get();
+        
+        return view('especialistas.create', compact('especialidades', 'cidades', 'necessidades'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'nome' => 'required|string|max:255',
+            'conselho' => 'nullable|string|max:255',
+            'especialidade_id' => 'nullable|exists:especialidades,id',
+            'cidade_id' => 'nullable|exists:cidades,id',
+            'endereco' => 'nullable|string|max:500',
+            'necessidade_id' => 'nullable|exists:necessidades,id',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ], [
+            'nome.required' => 'O nome do especialista é obrigatório.',
+            'nome.string' => 'O nome deve ser um texto válido.',
+            'nome.max' => 'O nome deve ter no máximo 255 caracteres.',
+            'conselho.max' => 'O conselho deve ter no máximo 255 caracteres.',
+            'especialidade_id.exists' => 'A especialidade selecionada não é válida.',
+            'cidade_id.exists' => 'A cidade selecionada não é válida.',
+            'endereco.max' => 'O endereço deve ter no máximo 500 caracteres.',
+            'necessidade_id.exists' => 'A necessidade selecionada não é válida.',
+            'foto.image' => 'O arquivo deve ser uma imagem.',
+            'foto.mimes' => 'A foto deve ser nos formatos: JPEG, PNG, JPG ou GIF.',
+            'foto.max' => 'A foto deve ter no máximo 2MB.',
+        ]);
+
+        // Upload da foto
+        $fotoName = null;
+        if ($request->hasFile('foto')) {
+            $foto = $request->file('foto');
+            $fotoName = $foto->getClientOriginalName() . '_' . uniqid() . '.' . $foto->getClientOriginalExtension();
+            $foto->storeAs('img/especialistas', $fotoName, 'public');
+        }
+
+        // Gerar slug único
+        $slug = $this->generateUniqueSlug($request->nome);
+
+        // Criar o especialista
+        Especialista::create([
+            'nome' => $request->nome,
+            'conselho' => $request->conselho,
+            'especialidade_id' => $request->especialidade_id,
+            'cidade_id' => $request->cidade_id,
+            'endereco' => $request->endereco,
+            'necessidade_id' => $request->necessidade_id,
+            'foto' => $fotoName,
+            'slug' => $slug,
+        ]);
+
+        return redirect()->route('especialistas.index')
+                        ->with('success', 'Especialista criado com sucesso!');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Especialista $especialista)
+    {
+        $especialista->load(['especialidade', 'cidade', 'necessidade']);
+        return view('especialistas.show', compact('especialista'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Especialista $especialista)
+    {
+        $especialidades = Especialidade::orderBy('nome', 'asc')->get();
+        $cidades = Cidade::orderBy('nome', 'asc')->get();
+        $necessidades = Necessidade::orderBy('titulo', 'asc')->get();
+        
+        return view('especialistas.edit', compact('especialista', 'especialidades', 'cidades', 'necessidades'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Especialista $especialista)
+    {
+        $request->validate([
+            'nome' => 'required|string|max:255',
+            'conselho' => 'nullable|string|max:255',
+            'especialidade_id' => 'nullable|exists:especialidades,id',
+            'cidade_id' => 'nullable|exists:cidades,id',
+            'endereco' => 'nullable|string|max:500',
+            'necessidade_id' => 'nullable|exists:necessidades,id',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ], [
+            'nome.required' => 'O nome do especialista é obrigatório.',
+            'nome.string' => 'O nome deve ser um texto válido.',
+            'nome.max' => 'O nome deve ter no máximo 255 caracteres.',
+            'conselho.max' => 'O conselho deve ter no máximo 255 caracteres.',
+            'especialidade_id.exists' => 'A especialidade selecionada não é válida.',
+            'cidade_id.exists' => 'A cidade selecionada não é válida.',
+            'endereco.max' => 'O endereço deve ter no máximo 500 caracteres.',
+            'necessidade_id.exists' => 'A necessidade selecionada não é válida.',
+            'foto.image' => 'O arquivo deve ser uma imagem.',
+            'foto.mimes' => 'A foto deve ser nos formatos: JPEG, PNG, JPG ou GIF.',
+            'foto.max' => 'A foto deve ter no máximo 2MB.',
+        ]);
+
+        // Upload da nova foto
+        $fotoName = $especialista->foto;
+        if ($request->hasFile('foto')) {
+            // Deletar foto antiga se existir
+            if ($especialista->foto && Storage::disk('public')->exists('img/especialistas/' . $especialista->foto)) {
+                Storage::disk('public')->delete('img/especialistas/' . $especialista->foto);
+            }
+            
+            $foto = $request->file('foto');
+            $fotoName = $foto->getClientOriginalName() . '_' . uniqid() . '.' . $foto->getClientOriginalExtension();
+            $foto->storeAs('img/especialistas', $fotoName, 'public');
+        }
+
+        // Gerar slug único se o nome mudou
+        $slug = $request->nome === $especialista->nome 
+            ? $especialista->slug 
+            : $this->generateUniqueSlug($request->nome, $especialista->id);
+
+        $especialista->update([
+            'nome' => $request->nome,
+            'conselho' => $request->conselho,
+            'especialidade_id' => $request->especialidade_id,
+            'cidade_id' => $request->cidade_id,
+            'endereco' => $request->endereco,
+            'necessidade_id' => $request->necessidade_id,
+            'foto' => $fotoName,
+            'slug' => $slug,
+        ]);
+
+        return redirect()->route('especialistas.index')
+                        ->with('success', 'Especialista atualizado com sucesso!');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Especialista $especialista)
+    {
+        try {
+            // Deletar foto se existir
+            if ($especialista->foto && Storage::disk('public')->exists('img/especialistas/' . $especialista->foto)) {
+                Storage::disk('public')->delete('img/especialistas/' . $especialista->foto);
+            }
+
+            $especialista->delete();
+
+            return redirect()->route('especialistas.index')
+                            ->with('success', 'Especialista excluído com sucesso!');
+        } catch (\Exception $e) {
+            return redirect()->route('especialistas.index')
+                            ->with('error', 'Erro ao excluir o especialista. Tente novamente.');
+        }
+    }
+
+    /**
+     * Buscar especialistas por AJAX
+     */
+    public function buscar(Request $request)
+    {
+        $term = $request->get('term');
+        
+        $especialistas = Especialista::with(['especialidade', 'cidade'])
+                                   ->where('nome', 'LIKE', "%{$term}%")
+                                   ->orWhere('conselho', 'LIKE', "%{$term}%")
+                                   ->orWhere('slug', 'LIKE', "%{$term}%")
+                                   ->orderBy('nome')
+                                   ->limit(10)
+                                   ->get(['id', 'nome', 'conselho', 'slug', 'especialidade_id', 'cidade_id']);
+
+        return response()->json($especialistas);
+    }
+
+    /**
+     * Gerar slug único baseado no nome
+     */
+    private function generateUniqueSlug($nome, $excludeId = null)
+    {
+        $baseSlug = Str::slug($nome);
+        $slug = $baseSlug;
+        $counter = 1;
+
+        while (true) {
+            $query = Especialista::where('slug', $slug);
+            
+            if ($excludeId) {
+                $query->where('id', '!=', $excludeId);
+            }
+
+            if (!$query->exists()) {
+                break;
+            }
+
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+        }
+
+        return $slug;
+    }
+} 
