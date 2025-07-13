@@ -3,13 +3,38 @@
 @section('title', 'Editar Parceiro')
 
 @section('content_header')
-    <h1>Editar Parceiro</h1>
+    <div class="d-flex justify-content-between align-items-center">
+        <h1>Editar Parceiro</h1>
+        <a href="{{ route('parceiros.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
 @stop
 
 @section('content')
+    {{-- Avisos sobre registros necessários --}}
+    @if(!empty($warnings))
+        <div class="row mb-3">
+            <div class="col-12">
+                @foreach($warnings as $warning)
+                    <div class="alert alert-{{ $warning['type'] }} alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        <h5><i class="icon fas fa-exclamation-triangle"></i> Atenção!</h5>
+                        {{ $warning['message'] }}
+                        <div class="mt-2">
+                            <a href="{{ $warning['route'] }}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-plus"></i> {{ $warning['button_text'] }}
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Editar Parceiro: {{ $parceiro->nome }}</h3>
+            <h3 class="card-title">Informações do Parceiro</h3>
         </div>
         <form action="{{ route('parceiros.update', $parceiro) }}" method="POST" enctype="multipart/form-data">
             @csrf
@@ -20,7 +45,8 @@
                         <div class="form-group">
                             <label for="nome">Nome <span class="text-danger">*</span></label>
                             <input type="text" class="form-control @error('nome') is-invalid @enderror" 
-                                   id="nome" name="nome" value="{{ old('nome', $parceiro->nome) }}" required>
+                                   id="nome" name="nome" value="{{ old('nome', $parceiro->nome) }}" 
+                                   placeholder="Ex: Hospital São José" required>
                             @error('nome')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -29,19 +55,29 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="cidade_id">Cidade</label>
-                            <select class="form-control @error('cidade_id') is-invalid @enderror" 
-                                    id="cidade_id" name="cidade_id">
-                                <option value="">Selecione uma cidade</option>
-                                @foreach($cidades as $cidade)
-                                    <option value="{{ $cidade->id }}" 
-                                            @if(old('cidade_id', $parceiro->cidade_id) == $cidade->id) selected @endif>
-                                        {{ $cidade->nome }} - {{ $cidade->uf }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <div class="d-flex">
+                                <select class="form-control @error('cidade_id') is-invalid @enderror" 
+                                        id="cidade_id" name="cidade_id" style="flex: 1;">
+                                    <option value="">Selecione uma cidade</option>
+                                    @foreach($cidades as $cidade)
+                                        <option value="{{ $cidade->id }}" 
+                                                @if(old('cidade_id', $parceiro->cidade_id) == $cidade->id) selected @endif>
+                                            {{ $cidade->nome }} - {{ $cidade->uf }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @if($cidades->isEmpty())
+                                    <a href="{{ route('cidades.create') }}" class="btn btn-warning btn-sm ml-2" target="_blank">
+                                        <i class="fas fa-plus"></i>
+                                    </a>
+                                @endif
+                            </div>
                             @error('cidade_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                            @if($cidades->isEmpty())
+                                <small class="text-muted">Nenhuma cidade cadastrada. <a href="{{ route('cidades.create') }}" target="_blank">Cadastre uma agora</a>.</small>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -50,26 +86,37 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="necessidade_id">Necessidade</label>
-                            <select class="form-control @error('necessidade_id') is-invalid @enderror" 
-                                    id="necessidade_id" name="necessidade_id">
-                                <option value="">Selecione uma necessidade</option>
-                                @foreach($necessidades as $necessidade)
-                                    <option value="{{ $necessidade->id }}" 
-                                            @if(old('necessidade_id', $parceiro->necessidade_id) == $necessidade->id) selected @endif>
-                                        {{ $necessidade->titulo }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <div class="d-flex">
+                                <select class="form-control @error('necessidade_id') is-invalid @enderror" 
+                                        id="necessidade_id" name="necessidade_id" style="flex: 1;">
+                                    <option value="">Selecione uma necessidade</option>
+                                    @foreach($necessidades as $necessidade)
+                                        <option value="{{ $necessidade->id }}" 
+                                                @if(old('necessidade_id', $parceiro->necessidade_id) == $necessidade->id) selected @endif>
+                                            {{ $necessidade->titulo }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @if($necessidades->isEmpty())
+                                    <a href="{{ route('necessidades.create') }}" class="btn btn-warning btn-sm ml-2" target="_blank">
+                                        <i class="fas fa-plus"></i>
+                                    </a>
+                                @endif
+                            </div>
                             @error('necessidade_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                            @if($necessidades->isEmpty())
+                                <small class="text-muted">Nenhuma necessidade cadastrada. <a href="{{ route('necessidades.create') }}" target="_blank">Cadastre uma agora</a>.</small>
+                            @endif
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="endereco">Endereço</label>
                             <input type="text" class="form-control @error('endereco') is-invalid @enderror" 
-                                   id="endereco" name="endereco" value="{{ old('endereco', $parceiro->endereco) }}">
+                                   id="endereco" name="endereco" value="{{ old('endereco', $parceiro->endereco) }}"
+                                   placeholder="Ex: Rua das Flores, 123 - Centro">
                             @error('endereco')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

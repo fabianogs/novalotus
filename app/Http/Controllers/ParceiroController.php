@@ -26,11 +26,39 @@ class ParceiroController extends Controller
         $cidades = Cidade::orderBy('nome')->get();
         $necessidades = Necessidade::orderBy('titulo')->get();
 
-        return view('parceiros.create', compact('cidades', 'necessidades'));
+        // Verificar se existem registros necessários
+        $warnings = [];
+        $canCreate = true;
+        
+        if ($cidades->isEmpty()) {
+            $warnings[] = [
+                'message' => 'Nenhuma cidade encontrada. É recomendado cadastrar cidades antes de criar parceiros.',
+                'type' => 'warning',
+                'route' => route('cidades.create'),
+                'button_text' => 'Cadastrar Cidade'
+            ];
+        }
+        
+        if ($necessidades->isEmpty()) {
+            $warnings[] = [
+                'message' => 'Nenhuma necessidade encontrada. É recomendado cadastrar necessidades antes de criar parceiros.',
+                'type' => 'warning',
+                'route' => route('necessidades.create'),
+                'button_text' => 'Cadastrar Necessidade'
+            ];
+        }
+
+        return view('parceiros.create', compact('cidades', 'necessidades', 'warnings', 'canCreate'));
     }
 
     public function store(Request $request)
     {
+        // Validação customizada para campos relacionados
+        $customValidation = $this->validateRelatedFields($request);
+        if ($customValidation !== true) {
+            return back()->withInput()->withErrors($customValidation);
+        }
+        
         $request->validate([
             'nome' => 'required|string|max:255',
             'descricao' => 'nullable|string',
@@ -44,10 +72,10 @@ class ParceiroController extends Controller
             'nome.string' => 'O nome deve ser um texto.',
             'nome.max' => 'O nome não pode ter mais de 255 caracteres.',
             'descricao.string' => 'A descrição deve ser um texto.',
-            'cidade_id.exists' => 'A cidade selecionada não existe.',
+            'cidade_id.exists' => 'A cidade selecionada não existe. Verifique se ela não foi removida.',
             'endereco.string' => 'O endereço deve ser um texto.',
             'endereco.max' => 'O endereço não pode ter mais de 255 caracteres.',
-            'necessidade_id.exists' => 'A necessidade selecionada não existe.',
+            'necessidade_id.exists' => 'A necessidade selecionada não existe. Verifique se ela não foi removida.',
             'logo.image' => 'O logo deve ser uma imagem.',
             'logo.mimes' => 'O logo deve ser um arquivo nos formatos: jpeg, png, jpg, gif, svg.',
             'logo.max' => 'O logo não pode ter mais de 2MB.',
@@ -93,11 +121,39 @@ class ParceiroController extends Controller
         $cidades = Cidade::orderBy('nome')->get();
         $necessidades = Necessidade::orderBy('titulo')->get();
 
-        return view('parceiros.edit', compact('parceiro', 'cidades', 'necessidades'));
+        // Verificar se existem registros necessários
+        $warnings = [];
+        $canEdit = true;
+        
+        if ($cidades->isEmpty()) {
+            $warnings[] = [
+                'message' => 'Nenhuma cidade encontrada. É recomendado cadastrar cidades antes de editar parceiros.',
+                'type' => 'warning',
+                'route' => route('cidades.create'),
+                'button_text' => 'Cadastrar Cidade'
+            ];
+        }
+        
+        if ($necessidades->isEmpty()) {
+            $warnings[] = [
+                'message' => 'Nenhuma necessidade encontrada. É recomendado cadastrar necessidades antes de editar parceiros.',
+                'type' => 'warning',
+                'route' => route('necessidades.create'),
+                'button_text' => 'Cadastrar Necessidade'
+            ];
+        }
+
+        return view('parceiros.edit', compact('parceiro', 'cidades', 'necessidades', 'warnings', 'canEdit'));
     }
 
     public function update(Request $request, Parceiro $parceiro)
     {
+        // Validação customizada para campos relacionados
+        $customValidation = $this->validateRelatedFields($request);
+        if ($customValidation !== true) {
+            return back()->withInput()->withErrors($customValidation);
+        }
+        
         $request->validate([
             'nome' => 'required|string|max:255',
             'descricao' => 'nullable|string',
@@ -111,10 +167,10 @@ class ParceiroController extends Controller
             'nome.string' => 'O nome deve ser um texto.',
             'nome.max' => 'O nome não pode ter mais de 255 caracteres.',
             'descricao.string' => 'A descrição deve ser um texto.',
-            'cidade_id.exists' => 'A cidade selecionada não existe.',
+            'cidade_id.exists' => 'A cidade selecionada não existe. Verifique se ela não foi removida.',
             'endereco.string' => 'O endereço deve ser um texto.',
             'endereco.max' => 'O endereço não pode ter mais de 255 caracteres.',
-            'necessidade_id.exists' => 'A necessidade selecionada não existe.',
+            'necessidade_id.exists' => 'A necessidade selecionada não existe. Verifique se ela não foi removida.',
             'logo.image' => 'O logo deve ser uma imagem.',
             'logo.mimes' => 'O logo deve ser um arquivo nos formatos: jpeg, png, jpg, gif, svg.',
             'logo.max' => 'O logo não pode ter mais de 2MB.',
@@ -218,5 +274,31 @@ class ParceiroController extends Controller
         }
 
         return $slug;
+    }
+
+    /**
+     * Validar campos relacionados de forma customizada
+     */
+    private function validateRelatedFields(Request $request)
+    {
+        $errors = [];
+
+        // Verificar se a cidade existe e está disponível
+        if ($request->filled('cidade_id')) {
+            $cidade = Cidade::find($request->cidade_id);
+            if (!$cidade) {
+                $errors['cidade_id'] = 'A cidade selecionada não foi encontrada. Pode ter sido removida por outro usuário.';
+            }
+        }
+
+        // Verificar se a necessidade existe e está disponível
+        if ($request->filled('necessidade_id')) {
+            $necessidade = Necessidade::find($request->necessidade_id);
+            if (!$necessidade) {
+                $errors['necessidade_id'] = 'A necessidade selecionada não foi encontrada. Pode ter sido removida por outro usuário.';
+            }
+        }
+
+        return empty($errors) ? true : $errors;
     }
 } 
