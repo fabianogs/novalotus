@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação da API - Nova Lotus</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .api-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .api-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .api-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .api-card p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .api-card .endpoints {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 15px;
+        }
+
+        .api-card a {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .api-card a:hover {
+            background: #5a67d8;
+        }
+
+        .info-section {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .info-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-section li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-section li:last-child {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>API Documentation</h1>
+            <p>Documentação completa das APIs do sistema Nova Lotus</p>
+        </div>
+
+        <div class="api-grid">
+            <div class="api-card">
+                <h3>Banners</h3>
+                <p>Gerenciamento de banners do sistema com controle de ativação.</p>
+                <div class="endpoints">3 endpoints disponíveis</div>
+                <a href="api_banners.md">Ver Documentação</a>
+            </div>
+
+            <div class="api-card">
+                <h3>Cidades</h3>
+                <p>Listagem de cidades com filtros por UF e busca por nome.</p>
+                <div class="endpoints">3 endpoints disponíveis</div>
+                <a href="api_cidades.md">Ver Documentação</a>
+            </div>
+
+            <div class="api-card">
+                <h3>Especialidades</h3>
+                <p>Especialidades médicas com listagem de especialistas relacionados.</p>
+                <div class="endpoints">3 endpoints disponíveis</div>
+                <a href="api_especialidades.md">Ver Documentação</a>
+            </div>
+
+            <div class="api-card">
+                <h3>Especialistas</h3>
+                <p>Profissionais especialistas com relacionamentos completos.</p>
+                <div class="endpoints">5 endpoints disponíveis</div>
+                <a href="api_especialistas.md">Ver Documentação</a>
+            </div>
+
+            <div class="api-card">
+                <h3>Necessidades</h3>
+                <p>Necessidades de saúde com especialistas e parceiros relacionados.</p>
+                <div class="endpoints">5 endpoints disponíveis</div>
+                <a href="api_necessidades.md">Ver Documentação</a>
+            </div>
+
+            <div class="api-card">
+                <h3>Parceiros</h3>
+                <p>Parceiros do sistema com filtros avançados e agrupamentos.</p>
+                <div class="endpoints">7 endpoints disponíveis</div>
+                <a href="api_parceiros.md">Ver Documentação</a>
+            </div>
+
+            <div class="api-card">
+                <h3>Planos</h3>
+                <p>Planos de saúde com busca por slug e listagem simplificada.</p>
+                <div class="endpoints">4 endpoints disponíveis</div>
+                <a href="api_planos.md">Ver Documentação</a>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>Informações Gerais</h2>
+            <ul>
+                <li><strong>Base URL:</strong> <code>/api/</code></li>
+                <li><strong>Formato de Resposta:</strong> JSON</li>
+                <li><strong>Métodos HTTP:</strong> GET (somente leitura)</li>
+                <li><strong>Autenticação:</strong> Não requerida para endpoints públicos</li>
+                <li><strong>Paginação:</strong> Automática com limite configurável</li>
+                <li><strong>Filtros:</strong> Parâmetros query para busca e filtros</li>
+                <li><strong>Eager Loading:</strong> Relacionamentos carregados automaticamente</li>
+                <li><strong>Códigos de Status:</strong> 200 (sucesso), 404 (não encontrado), 500 (erro)</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2025 Nova Lotus - Documentação da API</p>
+        </div>
+    </div>
+</body>
+</html> 
