@@ -1,0 +1,98 @@
+/* Personalização AdminLTE - Nova Lotus */
+
+/* Modifica o background-color do brand-link em sidebars dark */
+[class*=sidebar-dark] .brand-link {
+    background-color: white;
+}
+
+/* Estilos adicionais para o sistema */
+.content-wrapper {
+    background-color: #f4f4f4;
+}
+
+.main-header {
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Melhorias na visualização de cards */
+.card {
+    box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+}
+
+/* Estilo para botões de ação */
+.btn-group-xs > .btn, .btn-xs {
+    padding: .25rem .4rem;
+    font-size: .875rem;
+    line-height: 1.5;
+    border-radius: .2rem;
+}
+
+/* Estilo para tabelas */
+.table th {
+    border-top: none;
+    font-weight: 600;
+}
+
+/* Estilo para alertas */
+.alert {
+    border: 0;
+    border-radius: .25rem;
+}
+
+/* Estilos para formulários */
+.form-group label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+/* Preview de imagens */
+.img-preview {
+    max-width: 200px;
+    max-height: 200px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 5px;
+    margin-top: 10px;
+}
+
+/* Estilos para o dashboard */
+.small-box {
+    border-radius: .25rem;
+    box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+}
+
+.small-box-footer {
+    text-decoration: none;
+    color: rgba(255,255,255,.8);
+}
+
+.small-box-footer:hover {
+    text-decoration: none;
+    color: #fff;
+}
+
+/* Estilos para o menu lateral */
+.nav-sidebar .nav-item > .nav-link {
+    border-radius: 0;
+    margin-bottom: 0;
+}
+
+.nav-sidebar .nav-item > .nav-link:hover {
+    background-color: rgba(255,255,255,.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+} 

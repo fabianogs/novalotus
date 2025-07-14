@@ -312,31 +312,32 @@ return [
             'icon' => 'fas fa-fw fa-tachometer-alt',
         ],
         ['header' => 'PRINCIPAIS'],
+            [
+                'text' => 'Cidades',
+                'url' => 'cidades',
+                'icon' => 'fas fa-fw fa-city',
+            ],
+            [
+                'text' => 'Especialidades',
+                'url' => 'especialidades',
+                'icon' => 'fas fa-fw fa-user-md',
+            ],
+            [
+                'text' => 'Necessidades',
+                'url' => 'necessidades',
+                'icon' => 'fas fa-fw fa-hand-holding-heart',
+            ],
         [
             'text' => 'Banners',
             'url' => 'banners',
             'icon' => 'fas fa-fw fa-image',
         ],
         [
-            'text' => 'Cidades',
-            'url' => 'cidades',
-            'icon' => 'fas fa-fw fa-city',
-        ],
-        [
-            'text' => 'Especialidades',
-            'url' => 'especialidades',
-            'icon' => 'fas fa-fw fa-user-md',
-        ],
-        [
             'text' => 'Especialistas',
             'url' => 'especialistas',
             'icon' => 'fas fa-fw fa-user-tie',
         ],
-        [
-            'text' => 'Necessidades',
-            'url' => 'necessidades',
-            'icon' => 'fas fa-fw fa-hand-holding-heart',
-        ],
+
         [
             'text' => 'Parceiros',
             'url' => 'parceiros',
