@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\EspecialistaApiController;
 use App\Http\Controllers\Api\NecessidadeApiController;
 use App\Http\Controllers\Api\ParceiroApiController;
 use App\Http\Controllers\Api\PlanoApiController;
+use App\Http\Controllers\SobreController;
 
 /*
 |--------------------------------------------------------------------------
@@ -81,4 +82,9 @@ Route::prefix('planos')->group(function () {
     Route::get('/simple', [PlanoApiController::class, 'simple'])->name('api.planos.simple');
     Route::get('/slug/{slug}', [PlanoApiController::class, 'findBySlug'])->name('api.planos.slug');
     Route::get('/{id}', [PlanoApiController::class, 'show'])->name('api.planos.show')->where('id', '[0-9]+');
+});
+
+// Rotas da API para Sobre
+Route::prefix('sobre')->group(function () {
+    Route::get('/', [SobreController::class, 'show'])->name('api.sobre.show');
 }); 

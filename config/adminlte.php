@@ -363,6 +363,11 @@ return [
             'url' => 'configs',
             'icon' => 'fas fa-fw fa-cog',
         ],
+        [
+            'text' => 'Quem somos',
+            'url' => 'sobre',
+            'icon' => 'fas fa-fw fa-info-circle',
+        ],        
     ],
 
     /*

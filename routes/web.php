@@ -12,6 +12,7 @@ use App\Http\Controllers\NecessidadeController;
 use App\Http\Controllers\ParceiroController;
 use App\Http\Controllers\PlanoController;
 use App\Http\Controllers\SeoController;
+use App\Http\Controllers\SobreController;
 use App\Http\Controllers\UnidadeController;
 
 // Rota inicial - redireciona para login se não autenticado ou para dashboard se autenticado
@@ -70,6 +71,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/configs', [ConfigController::class, 'edit'])->name('configs.edit');
     Route::put('/configs', [ConfigController::class, 'update'])->name('configs.update');
     Route::get('/configs/show', [ConfigController::class, 'show'])->name('configs.show');
+    
+    // Rotas do Sobre (singleton - apenas 1 registro)
+    Route::get('/sobre', [SobreController::class, 'edit'])->name('sobre.edit');
+    Route::put('/sobre', [SobreController::class, 'update'])->name('sobre.update');
     
     Route::get('/necessidades/buscar', [NecessidadeController::class, 'buscar'])->name('necessidades.buscar');
 });
