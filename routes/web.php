@@ -14,6 +14,7 @@ use App\Http\Controllers\PlanoController;
 use App\Http\Controllers\SeoController;
 use App\Http\Controllers\SobreController;
 use App\Http\Controllers\UnidadeController;
+use App\Http\Controllers\ActivityLogController;
 
 // Rota inicial - redireciona para login se não autenticado ou para dashboard se autenticado
 Route::get('/', function () {
@@ -75,6 +76,11 @@ Route::middleware('auth')->group(function () {
     // Rotas do Sobre (singleton - apenas 1 registro)
     Route::get('/sobre', [SobreController::class, 'edit'])->name('sobre.edit');
     Route::put('/sobre', [SobreController::class, 'update'])->name('sobre.update');
+    
+    // Rotas dos Logs de Atividade
+    Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+    Route::get('/activity-logs/{activityLog}', [ActivityLogController::class, 'show'])->name('activity-logs.show');
+    Route::get('/activity-logs/export', [ActivityLogController::class, 'export'])->name('activity-logs.export');
     
     Route::get('/necessidades/buscar', [NecessidadeController::class, 'buscar'])->name('necessidades.buscar');
 });

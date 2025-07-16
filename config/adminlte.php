@@ -367,7 +367,12 @@ return [
             'text' => 'Quem somos',
             'url' => 'sobre',
             'icon' => 'fas fa-fw fa-info-circle',
-        ],        
+        ],
+        [
+            'text' => 'Logs de Atividade',
+            'url' => 'activity-logs',
+            'icon' => 'fas fa-fw fa-history',
+        ],
     ],
 
     /*
