@@ -15,6 +15,7 @@ use App\Http\Controllers\SeoController;
 use App\Http\Controllers\SobreController;
 use App\Http\Controllers\UnidadeController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\UserController;
 
 // Rota inicial - redireciona para login se não autenticado ou para dashboard se autenticado
 Route::get('/', function () {
@@ -67,6 +68,9 @@ Route::middleware('auth')->group(function () {
     
     // Rotas do CRUD de Unidades
     Route::resource('unidades', UnidadeController::class);
+    
+    // Rotas do CRUD de Usuários
+    Route::resource('users', UserController::class);
     
     // Rotas das Configurações (singleton - apenas 1 registro)
     Route::get('/configs', [ConfigController::class, 'edit'])->name('configs.edit');

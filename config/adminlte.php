@@ -373,6 +373,11 @@ return [
             'url' => 'activity-logs',
             'icon' => 'fas fa-fw fa-history',
         ],
+        [
+            'text' => 'Usuários',
+            'url' => 'users',
+            'icon' => 'fas fa-fw fa-users',
+        ],
     ],
 
     /*
