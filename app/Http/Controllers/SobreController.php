@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Sobre;
+use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class SobreController extends Controller
 {
+    use ApiResponse;
+
     /**
      * Mostra o formulário de edição do texto sobre
      */
@@ -38,15 +41,19 @@ class SobreController extends Controller
      */
     public function show(): JsonResponse
     {
-        $sobre = Sobre::firstOrCreate(['id' => 1], ['texto' => '']);
-        
-        return response()->json([
-            'success' => true,
-            'data' => [
+        try {
+            $sobre = Sobre::firstOrCreate(['id' => 1], ['texto' => '']);
+            
+            $data = [
                 'id' => $sobre->id,
                 'texto' => $sobre->texto,
                 'updated_at' => $sobre->updated_at
-            ]
-        ]);
+            ];
+            
+            return $this->successResponse($data, 'Texto sobre carregado com sucesso');
+            
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
+        }
     }
 }

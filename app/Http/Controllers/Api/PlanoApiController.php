@@ -4,135 +4,113 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Plano;
-use Illuminate\Http\Request;
+use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
 class PlanoApiController extends Controller
 {
+    use ApiResponse;
+
     /**
-     * Lista todos os planos com filtros opcionais
+     * Lista todos os planos cadastrados
+     * 
+     * Parâmetros opcionais via query string:
+     * - search: string (busca por título do plano)
+     * - limit: número (limita quantidade de resultados)
+     *
+     * @return JsonResponse
      */
-    public function index(Request $request): JsonResponse
+    public function index(): JsonResponse
     {
         try {
             $query = Plano::query();
-
-            // Filtro por busca (titulo ou descricao)
-            if ($request->has('search') && !empty($request->search)) {
-                $search = $request->search;
-                $query->where(function($q) use ($search) {
-                    $q->where('titulo', 'like', '%' . $search . '%')
-                      ->orWhere('descricao', 'like', '%' . $search . '%')
-                      ->orWhere('sintese', 'like', '%' . $search . '%');
-                });
-            }
-
-            // Limite de resultados
-            $limit = $request->get('limit', 10);
-            if ($limit > 100) $limit = 100; // Limite máximo
             
-            $planos = $query->paginate($limit);
-
-            return response()->json([
-                'success' => true,
-                'data' => $planos->items(),
-                'count' => $planos->count(),
-                'total' => $planos->total(),
-                'current_page' => $planos->currentPage(),
-                'last_page' => $planos->lastPage(),
-                'message' => 'Planos listados com sucesso'
-            ], 200);
-
+            // Busca por título do plano
+            if (request()->has('search')) {
+                $search = request('search');
+                $query->where('titulo', 'LIKE', '%' . $search . '%');
+            }
+            
+            // Ordenação alfabética por título
+            $query->orderBy('titulo', 'asc');
+            
+            // Limite de resultados
+            if (request()->has('limit')) {
+                $limit = (int) request('limit');
+                if ($limit > 0 && $limit <= 100) {
+                    $query->limit($limit);
+                }
+            }
+            
+            $planos = $query->get();
+            
+            return $this->successResponse($planos, 'Planos listados com sucesso');
+            
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 
     /**
-     * Exibe um plano específico
+     * Lista planos de forma simplificada (apenas título e slug)
+     *
+     * @return JsonResponse
+     */
+    public function simple(): JsonResponse
+    {
+        try {
+            $planos = Plano::select('id', 'titulo', 'slug')
+                ->orderBy('titulo', 'asc')
+                ->get();
+            
+            return $this->successResponse($planos, 'Planos simplificados listados com sucesso');
+            
+        } catch (\Exception $e) {
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
+        }
+    }
+
+    /**
+     * Mostra um plano específico
+     *
+     * @param int $id
+     * @return JsonResponse
      */
     public function show($id): JsonResponse
     {
         try {
             $plano = Plano::find($id);
-
+            
             if (!$plano) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Plano não encontrado'
-                ], 404);
+                return $this->errorResponse('Plano não encontrado', 404);
             }
-
-            return response()->json([
-                'success' => true,
-                'data' => $plano,
-                'message' => 'Plano encontrado com sucesso'
-            ], 200);
-
+            
+            return $this->successResponse($plano, 'Plano encontrado com sucesso');
+            
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 
     /**
-     * Busca plano por slug
+     * Busca planos por slug
+     *
+     * @param string $slug
+     * @return JsonResponse
      */
     public function findBySlug($slug): JsonResponse
     {
         try {
             $plano = Plano::where('slug', $slug)->first();
-
+            
             if (!$plano) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Plano não encontrado'
-                ], 404);
+                return $this->errorResponse('Plano não encontrado', 404);
             }
-
-            return response()->json([
-                'success' => true,
-                'data' => $plano,
-                'message' => 'Plano encontrado com sucesso'
-            ], 200);
-
+            
+            return $this->successResponse($plano, 'Plano encontrado com sucesso');
+            
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Lista planos simples (apenas titulo e slug)
-     */
-    public function simple(): JsonResponse
-    {
-        try {
-            $planos = Plano::select('id', 'titulo', 'slug', 'imagem')->get();
-
-            return response()->json([
-                'success' => true,
-                'data' => $planos,
-                'count' => $planos->count(),
-                'message' => 'Lista simples de planos'
-            ], 200);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 } 

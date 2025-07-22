@@ -4,15 +4,17 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
+use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
 class BannerApiController extends Controller
 {
+    use ApiResponse;
+
     /**
-     * Lista todos os banners cadastrados
+     * Lista todos os banners ativos cadastrados
      * 
      * Parâmetros opcionais via query string:
-     * - ativo: true/false (filtra por status ativo)
      * - limit: número (limita quantidade de resultados)
      *
      * @return JsonResponse
@@ -22,11 +24,8 @@ class BannerApiController extends Controller
         try {
             $query = Banner::query();
             
-            // Filtro por status ativo
-            if (request()->has('ativo')) {
-                $ativo = filter_var(request('ativo'), FILTER_VALIDATE_BOOLEAN);
-                $query->where('ativo', $ativo);
-            }
+            // Sempre filtra apenas banners ativos
+            $query = $this->applyActiveFilter($query);
             
             // Ordenação
             $query->orderBy('created_at', 'desc');
@@ -41,24 +40,15 @@ class BannerApiController extends Controller
             
             $banners = $query->get();
             
-            return response()->json([
-                'success' => true,
-                'data' => $banners,
-                'count' => $banners->count(),
-                'message' => 'Banners listados com sucesso'
-            ], 200);
+            return $this->successResponse($banners, 'Banners listados com sucesso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => config('app.debug') ? $e->getMessage() : 'Erro interno'
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 
     /**
-     * Lista apenas banners ativos
+     * Lista apenas banners ativos (método mantido para compatibilidade)
      * 
      * Parâmetros opcionais via query string:
      * - limit: número (limita quantidade de resultados)
@@ -68,7 +58,10 @@ class BannerApiController extends Controller
     public function active(): JsonResponse
     {
         try {
-            $query = Banner::where('ativo', true);
+            $query = Banner::query();
+            
+            // Sempre filtra apenas banners ativos
+            $query = $this->applyActiveFilter($query);
             
             // Ordenação
             $query->orderBy('created_at', 'desc');
@@ -83,24 +76,15 @@ class BannerApiController extends Controller
             
             $banners = $query->get();
             
-            return response()->json([
-                'success' => true,
-                'data' => $banners,
-                'count' => $banners->count(),
-                'message' => 'Banners ativos listados com sucesso'
-            ], 200);
+            return $this->successResponse($banners, 'Banners ativos listados com sucesso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => config('app.debug') ? $e->getMessage() : 'Erro interno'
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 
     /**
-     * Mostra um banner específico
+     * Mostra um banner específico (apenas se estiver ativo)
      *
      * @param int $id
      * @return JsonResponse
@@ -108,27 +92,16 @@ class BannerApiController extends Controller
     public function show($id): JsonResponse
     {
         try {
-            $banner = Banner::find($id);
+            $banner = Banner::where('ativo', true)->find($id);
             
             if (!$banner) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Banner não encontrado'
-                ], 404);
+                return $this->errorResponse('Banner não encontrado', 404);
             }
             
-            return response()->json([
-                'success' => true,
-                'data' => $banner,
-                'message' => 'Banner encontrado com sucesso'
-            ], 200);
+            return $this->successResponse($banner, 'Banner encontrado com sucesso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => config('app.debug') ? $e->getMessage() : 'Erro interno'
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 } 

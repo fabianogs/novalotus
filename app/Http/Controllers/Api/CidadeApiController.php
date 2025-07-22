@@ -4,17 +4,20 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cidade;
+use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
 class CidadeApiController extends Controller
 {
+    use ApiResponse;
+
     /**
      * Lista todas as cidades cadastradas
      * 
      * Parâmetros opcionais via query string:
-     * - uf: string (filtra por estado - ex: SP, RJ, MG)
-     * - limit: número (limita quantidade de resultados)
+     * - uf: string (filtra por estado)
      * - search: string (busca por nome da cidade)
+     * - limit: número (limita quantidade de resultados)
      *
      * @return JsonResponse
      */
@@ -23,7 +26,7 @@ class CidadeApiController extends Controller
         try {
             $query = Cidade::query();
             
-            // Filtro por UF (estado)
+            // Filtro por UF
             if (request()->has('uf')) {
                 $uf = strtoupper(request('uf'));
                 if (strlen($uf) === 2) {
@@ -37,32 +40,23 @@ class CidadeApiController extends Controller
                 $query->where('nome', 'LIKE', '%' . $search . '%');
             }
             
-            // Ordenação alfabética por nome
-            $query->orderBy('nome', 'asc');
+            // Ordenação por UF e nome
+            $query->orderBy('uf', 'asc')->orderBy('nome', 'asc');
             
             // Limite de resultados
             if (request()->has('limit')) {
                 $limit = (int) request('limit');
-                if ($limit > 0 && $limit <= 500) {
+                if ($limit > 0 && $limit <= 100) {
                     $query->limit($limit);
                 }
             }
             
             $cidades = $query->get();
             
-            return response()->json([
-                'success' => true,
-                'data' => $cidades,
-                'count' => $cidades->count(),
-                'message' => 'Cidades listadas com sucesso'
-            ], 200);
+            return $this->successResponse($cidades, 'Cidades listadas com sucesso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => config('app.debug') ? $e->getMessage() : 'Erro interno'
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 
@@ -79,23 +73,15 @@ class CidadeApiController extends Controller
                 ->get()
                 ->groupBy('uf');
             
-            return response()->json([
-                'success' => true,
-                'data' => $cidades,
-                'message' => 'Cidades agrupadas por UF listadas com sucesso'
-            ], 200);
+            return $this->successResponse($cidades, 'Cidades agrupadas por UF listadas com sucesso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => config('app.debug') ? $e->getMessage() : 'Erro interno'
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 
     /**
-     * Lista apenas os estados (UFs) disponíveis
+     * Lista todos os estados (UF) disponíveis
      *
      * @return JsonResponse
      */
@@ -107,19 +93,10 @@ class CidadeApiController extends Controller
                 ->orderBy('uf', 'asc')
                 ->pluck('uf');
             
-            return response()->json([
-                'success' => true,
-                'data' => $estados,
-                'count' => $estados->count(),
-                'message' => 'Estados listados com sucesso'
-            ], 200);
+            return $this->successResponse($estados, 'Estados listados com sucesso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => config('app.debug') ? $e->getMessage() : 'Erro interno'
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 } 

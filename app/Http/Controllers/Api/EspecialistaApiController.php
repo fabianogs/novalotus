@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Especialista;
+use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
 class EspecialistaApiController extends Controller
 {
+    use ApiResponse;
+
     /**
      * Lista todos os especialistas cadastrados
      * 
@@ -68,19 +71,10 @@ class EspecialistaApiController extends Controller
             
             $especialistas = $query->get();
             
-            return response()->json([
-                'success' => true,
-                'data' => $especialistas,
-                'count' => $especialistas->count(),
-                'message' => 'Especialistas listados com sucesso'
-            ], 200);
+            return $this->successResponse($especialistas, 'Especialistas listados com sucesso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => config('app.debug') ? $e->getMessage() : 'Erro interno'
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 
@@ -96,24 +90,13 @@ class EspecialistaApiController extends Controller
             $especialista = Especialista::with(['especialidade', 'cidade', 'necessidade'])->find($id);
             
             if (!$especialista) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Especialista não encontrado'
-                ], 404);
+                return $this->errorResponse('Especialista não encontrado', 404);
             }
             
-            return response()->json([
-                'success' => true,
-                'data' => $especialista,
-                'message' => 'Especialista encontrado com sucesso'
-            ], 200);
+            return $this->successResponse($especialista, 'Especialista encontrado com sucesso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => config('app.debug') ? $e->getMessage() : 'Erro interno'
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 
@@ -130,18 +113,10 @@ class EspecialistaApiController extends Controller
                 ->get()
                 ->groupBy('especialidade.nome');
             
-            return response()->json([
-                'success' => true,
-                'data' => $especialistas,
-                'message' => 'Especialistas agrupados por especialidade listados com sucesso'
-            ], 200);
+            return $this->successResponse($especialistas, 'Especialistas agrupados por especialidade listados com sucesso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => config('app.debug') ? $e->getMessage() : 'Erro interno'
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 
@@ -158,18 +133,10 @@ class EspecialistaApiController extends Controller
                 ->get()
                 ->groupBy('cidade.nome');
             
-            return response()->json([
-                'success' => true,
-                'data' => $especialistas,
-                'message' => 'Especialistas agrupados por cidade listados com sucesso'
-            ], 200);
+            return $this->successResponse($especialistas, 'Especialistas agrupados por cidade listados com sucesso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => config('app.debug') ? $e->getMessage() : 'Erro interno'
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 
@@ -187,24 +154,13 @@ class EspecialistaApiController extends Controller
                 ->first();
             
             if (!$especialista) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Especialista não encontrado'
-                ], 404);
+                return $this->errorResponse('Especialista não encontrado', 404);
             }
             
-            return response()->json([
-                'success' => true,
-                'data' => $especialista,
-                'message' => 'Especialista encontrado com sucesso'
-            ], 200);
+            return $this->successResponse($especialista, 'Especialista encontrado com sucesso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => config('app.debug') ? $e->getMessage() : 'Erro interno'
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 } 

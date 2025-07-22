@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Parceiro;
+use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
 class ParceiroApiController extends Controller
 {
+    use ApiResponse;
+
     /**
      * Lista todos os parceiros cadastrados
      * 
@@ -59,19 +62,10 @@ class ParceiroApiController extends Controller
             
             $parceiros = $query->get();
             
-            return response()->json([
-                'success' => true,
-                'data' => $parceiros,
-                'count' => $parceiros->count(),
-                'message' => 'Parceiros listados com sucesso'
-            ], 200);
+            return $this->successResponse($parceiros, 'Parceiros listados com sucesso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => config('app.debug') ? $e->getMessage() : 'Erro interno'
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 
@@ -87,24 +81,13 @@ class ParceiroApiController extends Controller
             $parceiro = Parceiro::with(['cidade', 'necessidade'])->find($id);
             
             if (!$parceiro) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Parceiro não encontrado'
-                ], 404);
+                return $this->errorResponse('Parceiro não encontrado', 404);
             }
             
-            return response()->json([
-                'success' => true,
-                'data' => $parceiro,
-                'message' => 'Parceiro encontrado com sucesso'
-            ], 200);
+            return $this->successResponse($parceiro, 'Parceiro encontrado com sucesso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => config('app.debug') ? $e->getMessage() : 'Erro interno'
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 
@@ -121,18 +104,10 @@ class ParceiroApiController extends Controller
                 ->get()
                 ->groupBy('necessidade.titulo');
             
-            return response()->json([
-                'success' => true,
-                'data' => $parceiros,
-                'message' => 'Parceiros agrupados por necessidade listados com sucesso'
-            ], 200);
+            return $this->successResponse($parceiros, 'Parceiros agrupados por necessidade listados com sucesso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => config('app.debug') ? $e->getMessage() : 'Erro interno'
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 
@@ -149,18 +124,10 @@ class ParceiroApiController extends Controller
                 ->get()
                 ->groupBy('cidade.nome');
             
-            return response()->json([
-                'success' => true,
-                'data' => $parceiros,
-                'message' => 'Parceiros agrupados por cidade listados com sucesso'
-            ], 200);
+            return $this->successResponse($parceiros, 'Parceiros agrupados por cidade listados com sucesso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => config('app.debug') ? $e->getMessage() : 'Erro interno'
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 
@@ -178,24 +145,13 @@ class ParceiroApiController extends Controller
                 ->first();
             
             if (!$parceiro) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Parceiro não encontrado'
-                ], 404);
+                return $this->errorResponse('Parceiro não encontrado', 404);
             }
             
-            return response()->json([
-                'success' => true,
-                'data' => $parceiro,
-                'message' => 'Parceiro encontrado com sucesso'
-            ], 200);
+            return $this->successResponse($parceiro, 'Parceiro encontrado com sucesso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => config('app.debug') ? $e->getMessage() : 'Erro interno'
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 
@@ -236,18 +192,10 @@ class ParceiroApiController extends Controller
             
             $parceiros = $query->get()->groupBy('cidade.uf');
             
-            return response()->json([
-                'success' => true,
-                'data' => $parceiros,
-                'message' => 'Parceiros agrupados por estado listados com sucesso'
-            ], 200);
+            return $this->successResponse($parceiros, 'Parceiros agrupados por estado listados com sucesso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => config('app.debug') ? $e->getMessage() : 'Erro interno'
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 
@@ -273,19 +221,10 @@ class ParceiroApiController extends Controller
             
             $parceiros = $query->get();
             
-            return response()->json([
-                'success' => true,
-                'data' => $parceiros,
-                'count' => $parceiros->count(),
-                'message' => 'Parceiros para carrossel listados com sucesso'
-            ], 200);
+            return $this->successResponse($parceiros, 'Parceiros para carrossel listados com sucesso');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro interno do servidor',
-                'error' => config('app.debug') ? $e->getMessage() : 'Erro interno'
-            ], 500);
+            return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
         }
     }
 } 
