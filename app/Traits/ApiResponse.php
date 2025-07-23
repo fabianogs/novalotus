@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\URL;
 trait ApiResponse
 {
     /**
-     * Converte URLs relativas de imagens para URLs absolutas
+     * Converte URLs relativas de imagens para URLs absolutas e remove campos de status
      *
      * @param mixed $data
      * @return mixed
@@ -27,6 +27,12 @@ trait ApiResponse
 
         if (is_array($data)) {
             foreach ($data as $key => $value) {
+                // Remove campos de status ativo
+                if ($this->isStatusField($key)) {
+                    unset($data[$key]);
+                    continue;
+                }
+                
                 if (is_string($value) && $this->isImageField($key) && !empty($value)) {
                     $data[$key] = $this->getAbsoluteUrl($value);
                 } elseif (is_array($value) || is_object($value)) {
@@ -48,6 +54,18 @@ trait ApiResponse
     {
         $imageFields = ['imagem', 'foto', 'logo', 'logo_carrossel'];
         return in_array($fieldName, $imageFields);
+    }
+
+    /**
+     * Verifica se o campo é um campo de status ativo
+     *
+     * @param string $fieldName
+     * @return bool
+     */
+    protected function isStatusField(string $fieldName): bool
+    {
+        $statusFields = ['ativo', 'status'];
+        return in_array($fieldName, $statusFields);
     }
 
     /**
