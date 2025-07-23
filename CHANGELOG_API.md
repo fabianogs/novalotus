@@ -9,6 +9,7 @@
 - **Conversão automática**: Todas as URLs de imagens são convertidas para URLs absolutas
 - **Campos suportados**: `imagem`, `foto`, `logo`, `logo_carrossel`
 - **Comportamento**: URLs relativas são convertidas para URLs completas usando `URL::to()`
+- **Caminhos específicos**: Cada tipo de imagem tem seu diretório específico
 
 #### 2. Filtro de Status Ativo
 - **Banner**: Sempre retorna apenas banners com `ativo = true`
@@ -90,16 +91,26 @@
 #### Antes
 ```json
 {
-    "imagem": "storage/banners/banner1.jpg"
+    "imagem": "12-1360x580_68783d0eb0e8a.jpg"
 }
 ```
 
 #### Depois
 ```json
 {
-    "imagem": "http://localhost:8000/storage/banners/banner1.jpg"
+    "imagem": "https://novalotuser.feelinghost.com.br/area_restrita/public/storage/img/banners/12-1360x580_68783d0eb0e8a.jpg"
 }
 ```
+
+### Mapeamento de Caminhos de Imagens
+
+| Campo | Diretório |
+|-------|-----------|
+| `imagem` (Banner) | `storage/img/banners/` |
+| `foto` (Especialista) | `storage/img/especialistas/` |
+| `logo` (Parceiro) | `storage/img/parceiros/` |
+| `logo_carrossel` (Parceiro) | `storage/img/parceiros/` |
+| `imagem` (Plano) | `storage/img/planos/` |
 
 ### Campos Removidos
 
@@ -107,7 +118,7 @@
 ```json
 {
     "id": 1,
-    "imagem": "http://localhost:8000/storage/banners/banner1.jpg",
+    "imagem": "https://novalotuser.feelinghost.com.br/area_restrita/public/storage/img/banners/banner1.jpg",
     "titulo": "Banner Principal",
     "link": "https://example.com",
     "ativo": true,
@@ -120,7 +131,7 @@
 ```json
 {
     "id": 1,
-    "imagem": "http://localhost:8000/storage/banners/banner1.jpg",
+    "imagem": "https://novalotuser.feelinghost.com.br/area_restrita/public/storage/img/banners/banner1.jpg",
     "titulo": "Banner Principal",
     "link": "https://example.com",
     "created_at": "2025-01-01T00:00:00.000000Z",
@@ -133,7 +144,7 @@
 - ✅ Todas as rotas existentes mantidas
 - ✅ Parâmetros de query string mantidos
 - ✅ Estrutura de dados mantida
-- ✅ Apenas URLs de imagens convertidas para absolutas
+- ✅ URLs de imagens convertidas para absolutas com caminhos corretos
 - ✅ Apenas registros ativos retornados (quando aplicável)
 - ✅ Campos de status removidos das respostas
 
@@ -141,7 +152,8 @@
 
 1. **Banners**: Agora sempre retornam apenas banners ativos e o campo `ativo` é removido da resposta
 2. **SEO**: Agora sempre retornam apenas registros ativos e o campo `status` é removido da resposta
-3. **Imagens**: Todas as URLs são convertidas para absolutas automaticamente
+3. **Imagens**: Todas as URLs são convertidas para absolutas automaticamente com caminhos específicos
 4. **Performance**: Conversão de URLs e remoção de campos é feita apenas na resposta final
 5. **Debug**: Detalhes de erro são incluídos apenas quando `APP_DEBUG=true`
-6. **Campos removidos**: `ativo` e `status` são automaticamente removidos de todas as respostas 
+6. **Campos removidos**: `ativo` e `status` são automaticamente removidos de todas as respostas
+7. **Caminhos específicos**: Cada tipo de imagem tem seu diretório específico mapeado 

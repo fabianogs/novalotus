@@ -34,7 +34,7 @@ trait ApiResponse
                 }
                 
                 if (is_string($value) && $this->isImageField($key) && !empty($value)) {
-                    $data[$key] = $this->getAbsoluteUrl($value);
+                    $data[$key] = $this->getAbsoluteUrl($value, $key);
                 } elseif (is_array($value) || is_object($value)) {
                     $data[$key] = $this->convertImageUrls($value);
                 }
@@ -72,9 +72,10 @@ trait ApiResponse
      * Converte URL relativa para absoluta
      *
      * @param string $url
+     * @param string $fieldName
      * @return string
      */
-    protected function getAbsoluteUrl(string $url): string
+    protected function getAbsoluteUrl(string $url, string $fieldName = ''): string
     {
         // Se já é uma URL absoluta, retorna como está
         if (filter_var($url, FILTER_VALIDATE_URL)) {
@@ -89,13 +90,32 @@ trait ApiResponse
             return URL::to($url);
         }
 
-        // Se é apenas um nome de arquivo, assume que está em storage/app/public
+        // Se é apenas um nome de arquivo, adiciona o caminho baseado no tipo de campo
         if (!str_contains($url, '/')) {
-            return URL::to('storage/' . $url);
+            $basePath = $this->getImageBasePath($fieldName);
+            return URL::to($basePath . $url);
         }
 
         // Para outros casos, retorna a URL completa
         return URL::to($url);
+    }
+
+    /**
+     * Retorna o caminho base para cada tipo de campo de imagem
+     *
+     * @param string $fieldName
+     * @return string
+     */
+    protected function getImageBasePath(string $fieldName): string
+    {
+        $paths = [
+            'imagem' => 'storage/img/banners/',
+            'foto' => 'storage/img/especialistas/',
+            'logo' => 'storage/img/parceiros/',
+            'logo_carrossel' => 'storage/img/parceiros/',
+        ];
+
+        return $paths[$fieldName] ?? 'storage/';
     }
 
     /**
