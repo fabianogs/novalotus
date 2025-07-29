@@ -37,7 +37,10 @@ class CidadeApiController extends Controller
             // Busca por nome da cidade
             if (request()->has('search')) {
                 $search = request('search');
-                $query->where('nome', 'LIKE', '%' . $search . '%');
+                $query->where(function($q) use ($search) {
+                    $q->where('nome', 'LIKE', '%' . $search . '%')
+                      ->orWhere('nome_completo', 'LIKE', '%' . $search . '%');
+                });
             }
             
             // Ordenação por UF e nome

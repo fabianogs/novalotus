@@ -15,29 +15,26 @@ Esta documentação descreve os endpoints REST API criados para o modelo Cidade.
 Lista todas as cidades cadastradas no sistema.
 
 #### Parâmetros Opcionais (Query String)
-- `uf` (string): Filtra por estado (2 caracteres - ex: SP, RJ, MG)
 - `search` (string): Busca por nome da cidade (busca parcial)
-- `limit` (integer): Limita a quantidade de resultados (máximo: 500)
+- `uf` (string): Filtra por UF específica
+- `limit` (integer): Limita a quantidade de resultados (máximo: 100)
 
 #### Exemplos de Uso
 ```bash
 # Listar todas as cidades
 GET /api/cidades
 
-# Listar cidades de São Paulo
-GET /api/cidades?uf=SP
-
 # Buscar cidades com "São" no nome
 GET /api/cidades?search=São
 
-# Listar as 50 primeiras cidades
-GET /api/cidades?limit=50
+# Cidades de São Paulo
+GET /api/cidades?uf=SP
 
-# Combinar filtros - cidades do RJ com "Rio" no nome
-GET /api/cidades?uf=RJ&search=Rio
+# Primeiras 20 cidades
+GET /api/cidades?limit=20
 
-# Listar as 10 primeiras cidades de MG
-GET /api/cidades?uf=MG&limit=10
+# Combinar filtros - cidades de SP com "São" no nome
+GET /api/cidades?uf=SP&search=São
 ```
 
 #### Resposta de Sucesso (200)
@@ -50,14 +47,16 @@ GET /api/cidades?uf=MG&limit=10
             "nome": "São Paulo",
             "slug": "sao-paulo",
             "uf": "SP",
+            "nome_completo": "São Paulo - SP",
             "created_at": "2025-01-09T12:00:00.000000Z",
             "updated_at": "2025-01-09T12:00:00.000000Z"
         },
         {
             "id": 2,
-            "nome": "Rio de Janeiro",
-            "slug": "rio-de-janeiro",
-            "uf": "RJ",
+            "nome": "Ribeirão Preto",
+            "slug": "ribeirao-preto",
+            "uf": "SP",
+            "nome_completo": "Ribeirão Preto - SP",
             "created_at": "2025-01-09T12:00:00.000000Z",
             "updated_at": "2025-01-09T12:00:00.000000Z"
         }
@@ -67,15 +66,17 @@ GET /api/cidades?uf=MG&limit=10
 }
 ```
 
-### 2. Listar Cidades Agrupadas por UF
-**GET** `/api/cidades/by-uf`
+### 2. Visualizar Cidade Específica
+**GET** `/api/cidades/{id}`
 
-Lista todas as cidades agrupadas por estado (UF).
+Retorna os dados de uma cidade específica.
 
-#### Exemplos de Uso
+#### Parâmetros
+- `id` (integer, obrigatório): ID da cidade
+
+#### Exemplo de Uso
 ```bash
-# Listar cidades agrupadas por estado
-GET /api/cidades/by-uf
+GET /api/cidades/1
 ```
 
 #### Resposta de Sucesso (200)
@@ -83,48 +84,30 @@ GET /api/cidades/by-uf
 {
     "success": true,
     "data": {
-        "RJ": [
-            {
-                "id": 2,
-                "nome": "Rio de Janeiro",
-                "slug": "rio-de-janeiro",
-                "uf": "RJ",
-                "created_at": "2025-01-09T12:00:00.000000Z",
-                "updated_at": "2025-01-09T12:00:00.000000Z"
-            },
-            {
-                "id": 3,
-                "nome": "Niterói",
-                "slug": "niteroi",
-                "uf": "RJ",
-                "created_at": "2025-01-09T12:00:00.000000Z",
-                "updated_at": "2025-01-09T12:00:00.000000Z"
-            }
-        ],
-        "SP": [
-            {
-                "id": 1,
-                "nome": "São Paulo",
-                "slug": "sao-paulo",
-                "uf": "SP",
-                "created_at": "2025-01-09T12:00:00.000000Z",
-                "updated_at": "2025-01-09T12:00:00.000000Z"
-            }
-        ]
+        "id": 1,
+        "nome": "São Paulo",
+        "slug": "sao-paulo",
+        "uf": "SP",
+        "nome_completo": "São Paulo - SP",
+        "created_at": "2025-01-09T12:00:00.000000Z",
+        "updated_at": "2025-01-09T12:00:00.000000Z"
     },
-    "message": "Cidades agrupadas por UF listadas com sucesso"
+    "message": "Cidade encontrada com sucesso"
 }
 ```
 
-### 3. Listar Estados Disponíveis
-**GET** `/api/cidades/estados`
+### 3. Buscar Cidades
+**GET** `/api/cidades/buscar`
 
-Lista apenas os estados (UFs) que possuem cidades cadastradas.
+Endpoint para busca dinâmica de cidades via AJAX.
 
-#### Exemplos de Uso
+#### Parâmetros Opcionais (Query String)
+- `search` (string): Termo de busca (nome da cidade)
+- `uf` (string): Filtra por UF
+
+#### Exemplo de Uso
 ```bash
-# Listar estados disponíveis
-GET /api/cidades/estados
+GET /api/cidades/buscar?search=São&uf=SP
 ```
 
 #### Resposta de Sucesso (200)
@@ -132,39 +115,105 @@ GET /api/cidades/estados
 {
     "success": true,
     "data": [
-        "RJ",
-        "SP",
-        "MG"
+        {
+            "id": 1,
+            "nome": "São Paulo",
+            "uf": "SP",
+            "nome_completo": "São Paulo - SP"
+        },
+        {
+            "id": 3,
+            "nome": "São José dos Campos",
+            "uf": "SP",
+            "nome_completo": "São José dos Campos - SP"
+        }
     ],
-    "count": 3,
-    "message": "Estados listados com sucesso"
+    "count": 2,
+    "message": "Busca realizada com sucesso"
 }
 ```
 
-## Códigos de Status HTTP
+## Códigos de Resposta
 
-- **200 OK**: Sucesso
+### Sucesso
+- **200 OK**: Requisição processada com sucesso
+- **201 Created**: Recurso criado com sucesso
+
+### Erro do Cliente
+- **400 Bad Request**: Parâmetros inválidos ou malformados
+- **404 Not Found**: Cidade não encontrada
+- **422 Unprocessable Entity**: Dados de validação inválidos
+
+### Erro do Servidor
 - **500 Internal Server Error**: Erro interno do servidor
 
-## Estrutura dos Dados
+## Estrutura de Dados
 
-Cada cidade contém os seguintes campos:
+### Cidade
+```json
+{
+    "id": "integer",
+    "nome": "string",
+    "slug": "string",
+    "uf": "string",
+    "nome_completo": "string",
+    "created_at": "datetime",
+    "updated_at": "datetime"
+}
+```
 
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `id` | integer | ID único da cidade |
-| `nome` | string | Nome da cidade |
-| `slug` | string | Slug único da cidade (para URLs amigáveis) |
-| `uf` | string | Sigla do estado (2 caracteres) |
-| `created_at` | datetime | Data de criação |
-| `updated_at` | datetime | Data da última atualização |
+## Notas Importantes
+
+### Campos
+- **`nome`**: Nome da cidade
+- **`uf`**: Sigla do estado (2 caracteres)
+- **`nome_completo`**: Nome completo da cidade com UF (ex: "São Paulo - SP")
+- **`slug`**: Gerado automaticamente a partir do nome
+
+### Sincronização
+Os dados das cidades são sincronizados automaticamente da API externa:
+- **Endpoint**: `http://lotus-api.cloud.zielo.com.br/api/get_cidades_prestadores`
+- **Frequência**: Diária às 02:30
+- **Comando**: `php artisan cidades:sync`
+
+### Filtros Disponíveis
+- **Por nome**: `?search=São`
+- **Por UF**: `?uf=SP`
+- **Limite de resultados**: `?limit=20`
+
+## Exemplos de Uso Completo
+
+### Buscar Cidades de São Paulo
+```bash
+GET /api/cidades?uf=SP
+```
+
+### Buscar Cidades com "São" no Nome
+```bash
+GET /api/cidades?search=São
+```
+
+### Listar Primeiras 10 Cidades
+```bash
+GET /api/cidades?limit=10
+```
+
+### Combinar Múltiplos Filtros
+```bash
+GET /api/cidades?uf=SP&search=São&limit=50
+```
+
+### Busca Dinâmica via AJAX
+```bash
+GET /api/cidades/buscar?search=São&uf=SP
+```
 
 ## Observações
 
-- Todos os endpoints retornam dados em formato JSON
-- As cidades são ordenadas alfabeticamente por nome (exceto no agrupamento por UF)
-- No agrupamento por UF, as cidades são ordenadas primeiro por estado, depois por nome
-- O filtro por UF aceita apenas códigos de 2 caracteres (maiúsculas ou minúsculas)
-- A busca por nome é case-insensitive e busca parcial
-- O limite máximo de resultados por requisição é 500
-- Em modo de debug, detalhes de erros internos são expostos 
+- **Todos os endpoints retornam dados em formato JSON**
+- **As cidades são ordenadas alfabeticamente por nome**
+- **O limite máximo de resultados por requisição é 100**
+- **A busca é case-insensitive e parcial**
+- **Os dados são sincronizados da API externa, não criados manualmente**
+- **O campo `nome_completo` facilita a exibição na interface**
+- **O slug é gerado automaticamente a partir do nome** 

@@ -75,34 +75,43 @@
                             @enderror
                         </div>
 
-                        <!-- Especialidade -->
+                        <!-- Especialidades -->
                         <div class="form-group">
-                            <label for="especialidade_id">Especialidade</label>
-                            <div class="d-flex">
-                                <select class="form-control @error('especialidade_id') is-invalid @enderror" 
-                                        id="especialidade_id" 
-                                        name="especialidade_id"
-                                        style="flex: 1;">
-                                    <option value="">Selecione uma especialidade</option>
-                                    @foreach($especialidades as $especialidade)
-                                        <option value="{{ $especialidade->id }}" {{ old('especialidade_id', $especialista->especialidade_id) == $especialidade->id ? 'selected' : '' }}>
-                                            {{ $especialidade->nome }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                            <label>Especialidades</label>
+                            <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
                                 @if($especialidades->isEmpty())
-                                    <a href="{{ route('especialidades.create') }}" class="btn btn-warning btn-sm ml-2" target="_blank">
-                                        <i class="fas fa-plus"></i>
-                                    </a>
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <p>Nenhuma especialidade cadastrada</p>
+                                        <a href="{{ route('especialidades.create') }}" class="btn btn-sm btn-warning" target="_blank">
+                                            <i class="fas fa-plus"></i> Cadastrar Especialidade
+                                        </a>
+                                    </div>
+                                @else
+                                    @foreach($especialidades as $especialidade)
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" 
+                                                   class="custom-control-input" 
+                                                   id="especialidade_{{ $especialidade->id }}" 
+                                                   name="especialidades[]" 
+                                                   value="{{ $especialidade->id }}"
+                                                   {{ in_array($especialidade->id, old('especialidades', $especialista->especialidades->pluck('id')->toArray())) ? 'checked' : '' }}>
+                                            <label class="custom-control-label" for="especialidade_{{ $especialidade->id }}">
+                                                {{ $especialidade->descricao }}
+                                            </label>
+                                        </div>
+                                    @endforeach
                                 @endif
                             </div>
-                            @error('especialidade_id')
-                                <span class="invalid-feedback" role="alert">
+                            @error('especialidades')
+                                <span class="invalid-feedback d-block" role="alert">
                                     <strong>{{ $message }}</strong>
                                 </span>
                             @enderror
-                            @if($especialidades->isEmpty())
-                                <small class="text-muted">Nenhuma especialidade cadastrada. <a href="{{ route('especialidades.create') }}" target="_blank">Cadastre uma agora</a>.</small>
+                            @if($especialidades->isNotEmpty())
+                                <small class="form-text text-muted">
+                                    Selecione uma ou mais especialidades que o especialista possui.
+                                </small>
                             @endif
                         </div>
 
@@ -267,6 +276,15 @@
 
         .img-thumbnail {
             border-radius: 8px;
+        }
+
+        .custom-checkbox .custom-control-label::before {
+            border-radius: 0.25rem;
+        }
+
+        .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+            background-color: #007bff;
+            border-color: #007bff;
         }
     </style>
 @stop

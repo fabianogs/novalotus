@@ -11,6 +11,7 @@ class Cidade extends Model
         'nome',
         'slug',
         'uf',
+        'nome_completo',
     ];
 
     public function especialistas(): HasMany

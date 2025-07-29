@@ -15,26 +15,19 @@ Esta documentação descreve os endpoints REST API criados para o modelo Especia
 Lista todas as especialidades cadastradas no sistema.
 
 #### Parâmetros Opcionais (Query String)
-- `search` (string): Busca por nome da especialidade (busca parcial)
-- `limit` (integer): Limita a quantidade de resultados (máximo: 200)
-- `with_count` (boolean): Inclui contagem de especialistas por especialidade
+- `search` (string): Busca por descrição da especialidade (busca parcial)
+- `limit` (integer): Limita a quantidade de resultados (máximo: 100)
 
 #### Exemplos de Uso
 ```bash
 # Listar todas as especialidades
 GET /api/especialidades
 
-# Buscar especialidades com "cardio" no nome
+# Buscar especialidades com "cardio" na descrição
 GET /api/especialidades?search=cardio
 
-# Listar as 10 primeiras especialidades
-GET /api/especialidades?limit=10
-
-# Listar especialidades com contagem de especialistas
-GET /api/especialidades?with_count=true
-
-# Combinar filtros
-GET /api/especialidades?search=psico&with_count=true&limit=5
+# Primeiras 20 especialidades
+GET /api/especialidades?limit=20
 ```
 
 #### Resposta de Sucesso (200)
@@ -44,19 +37,17 @@ GET /api/especialidades?search=psico&with_count=true&limit=5
     "data": [
         {
             "id": 1,
-            "nome": "Cardiologia",
+            "descricao": "Cardiologia",
             "slug": "cardiologia",
             "created_at": "2025-01-09T12:00:00.000000Z",
-            "updated_at": "2025-01-09T12:00:00.000000Z",
-            "especialistas_count": 5
+            "updated_at": "2025-01-09T12:00:00.000000Z"
         },
         {
             "id": 2,
-            "nome": "Psicologia",
-            "slug": "psicologia",
+            "descricao": "Clínica Médica",
+            "slug": "clinica-medica",
             "created_at": "2025-01-09T12:00:00.000000Z",
-            "updated_at": "2025-01-09T12:00:00.000000Z",
-            "especialistas_count": 3
+            "updated_at": "2025-01-09T12:00:00.000000Z"
         }
     ],
     "count": 2,
@@ -67,14 +58,13 @@ GET /api/especialidades?search=psico&with_count=true&limit=5
 ### 2. Visualizar Especialidade Específica
 **GET** `/api/especialidades/{id}`
 
-Retorna os dados de uma especialidade específica com contagem de especialistas.
+Retorna os dados de uma especialidade específica.
 
 #### Parâmetros
 - `id` (integer, obrigatório): ID da especialidade
 
-#### Exemplos de Uso
+#### Exemplo de Uso
 ```bash
-# Visualizar especialidade com ID 1
 GET /api/especialidades/1
 ```
 
@@ -84,140 +74,114 @@ GET /api/especialidades/1
     "success": true,
     "data": {
         "id": 1,
-        "nome": "Cardiologia",
+        "descricao": "Cardiologia",
         "slug": "cardiologia",
         "created_at": "2025-01-09T12:00:00.000000Z",
-        "updated_at": "2025-01-09T12:00:00.000000Z",
-        "especialistas_count": 5
+        "updated_at": "2025-01-09T12:00:00.000000Z"
     },
     "message": "Especialidade encontrada com sucesso"
 }
 ```
 
-### 3. Listar Especialistas de uma Especialidade
-**GET** `/api/especialidades/{id}/especialistas`
+### 3. Buscar Especialidades
+**GET** `/api/especialidades/buscar`
 
-Lista todos os especialistas de uma especialidade específica.
-
-#### Parâmetros
-- `id` (integer, obrigatório): ID da especialidade
+Endpoint para busca dinâmica de especialidades via AJAX.
 
 #### Parâmetros Opcionais (Query String)
-- `cidade_id` (integer): Filtra especialistas por cidade
-- `necessidade_id` (integer): Filtra especialistas por necessidade
-- `limit` (integer): Limita a quantidade de resultados (máximo: 100)
+- `search` (string): Termo de busca (descrição da especialidade)
 
-#### Exemplos de Uso
+#### Exemplo de Uso
 ```bash
-# Listar todos os especialistas de cardiologia (ID 1)
-GET /api/especialidades/1/especialistas
-
-# Especialistas de cardiologia em São Paulo (cidade ID 1)
-GET /api/especialidades/1/especialistas?cidade_id=1
-
-# Especialistas de cardiologia por necessidade específica
-GET /api/especialidades/1/especialistas?necessidade_id=2
-
-# Primeiros 10 especialistas de cardiologia
-GET /api/especialidades/1/especialistas?limit=10
-
-# Combinar filtros
-GET /api/especialidades/1/especialistas?cidade_id=1&necessidade_id=2&limit=5
+GET /api/especialidades/buscar?search=cardio
 ```
 
 #### Resposta de Sucesso (200)
 ```json
 {
     "success": true,
-    "especialidade": {
-        "id": 1,
-        "nome": "Cardiologia",
-        "slug": "cardiologia"
-    },
     "data": [
         {
             "id": 1,
-            "foto": "especialista1.jpg",
-            "nome": "Dr. João Silva",
-            "conselho": "CRM 12345/SP",
-            "especialidade_id": 1,
-            "cidade_id": 1,
-            "endereco": "Rua das Flores, 123",
-            "necessidade_id": 2,
-            "slug": "dr-joao-silva",
-            "created_at": "2025-01-09T12:00:00.000000Z",
-            "updated_at": "2025-01-09T12:00:00.000000Z",
-            "cidade": {
-                "id": 1,
-                "nome": "São Paulo",
-                "slug": "sao-paulo",
-                "uf": "SP",
-                "created_at": "2025-01-09T12:00:00.000000Z",
-                "updated_at": "2025-01-09T12:00:00.000000Z"
-            },
-            "necessidade": {
-                "id": 2,
-                "nome": "Consulta de Rotina",
-                "slug": "consulta-rotina",
-                "created_at": "2025-01-09T12:00:00.000000Z",
-                "updated_at": "2025-01-09T12:00:00.000000Z"
-            }
+            "descricao": "Cardiologia"
+        },
+        {
+            "id": 3,
+            "descricao": "Cardiologia Pediátrica"
         }
     ],
-    "count": 1,
-    "message": "Especialistas da especialidade listados com sucesso"
+    "count": 2,
+    "message": "Busca realizada com sucesso"
 }
 ```
 
-#### Resposta de Erro - Especialidade Não Encontrada (404)
-```json
-{
-    "success": false,
-    "message": "Especialidade não encontrada"
-}
-```
+## Códigos de Resposta
 
-## Códigos de Status HTTP
+### Sucesso
+- **200 OK**: Requisição processada com sucesso
+- **201 Created**: Recurso criado com sucesso
 
-- **200 OK**: Sucesso
+### Erro do Cliente
+- **400 Bad Request**: Parâmetros inválidos ou malformados
 - **404 Not Found**: Especialidade não encontrada
+- **422 Unprocessable Entity**: Dados de validação inválidos
+
+### Erro do Servidor
 - **500 Internal Server Error**: Erro interno do servidor
 
-## Estrutura dos Dados
+## Estrutura de Dados
 
 ### Especialidade
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `id` | integer | ID único da especialidade |
-| `nome` | string | Nome da especialidade |
-| `slug` | string | Slug único da especialidade (para URLs amigáveis) |
-| `created_at` | datetime | Data de criação |
-| `updated_at` | datetime | Data da última atualização |
-| `especialistas_count` | integer | Contagem de especialistas (quando solicitado) |
+```json
+{
+    "id": "integer",
+    "descricao": "string",
+    "slug": "string",
+    "created_at": "datetime",
+    "updated_at": "datetime"
+}
+```
 
-### Especialista (retornado em `/especialistas`)
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `id` | integer | ID único do especialista |
-| `foto` | string\|null | Nome do arquivo da foto |
-| `nome` | string | Nome do especialista |
-| `conselho` | string | Número do conselho profissional |
-| `especialidade_id` | integer | ID da especialidade |
-| `cidade_id` | integer | ID da cidade |
-| `endereco` | string | Endereço do especialista |
-| `necessidade_id` | integer | ID da necessidade atendida |
-| `slug` | string | Slug único do especialista |
-| `created_at` | datetime | Data de criação |
-| `updated_at` | datetime | Data da última atualização |
-| `cidade` | object | Dados da cidade (com eager loading) |
-| `necessidade` | object | Dados da necessidade (com eager loading) |
+## Notas Importantes
+
+### Campo Principal
+- **`descricao`**: Campo principal da especialidade (anteriormente `nome`)
+- **`id`**: ID único da API externa (não auto-incremento)
+- **`slug`**: Gerado automaticamente a partir da descrição
+
+### Sincronização
+Os dados das especialidades são sincronizados automaticamente da API externa:
+- **Endpoint**: `http://lotus-api.cloud.zielo.com.br/api/get_especialidades`
+- **Frequência**: Diária às 02:00
+- **Comando**: `php artisan especialidades:sync`
+
+### Filtros Disponíveis
+- **Por descrição**: `?search=cardio`
+- **Limite de resultados**: `?limit=20`
+
+## Exemplos de Uso Completo
+
+### Buscar Especialidades com "Cardio"
+```bash
+GET /api/especialidades?search=cardio
+```
+
+### Listar Primeiras 10 Especialidades
+```bash
+GET /api/especialidades?limit=10
+```
+
+### Busca Dinâmica via AJAX
+```bash
+GET /api/especialidades/buscar?search=cardio
+```
 
 ## Observações
 
-- Todos os endpoints retornam dados em formato JSON
-- As especialidades são ordenadas alfabeticamente por nome
-- Os especialistas são ordenados alfabeticamente por nome
-- O endpoint de especialistas inclui eager loading para cidade e necessidade
-- Os limites máximos são: 200 para especialidades, 100 para especialistas
-- Em modo de debug, detalhes de erros internos são expostos
-- Os filtros por `cidade_id` e `necessidade_id` são opcionais e podem ser combinados 
+- **Todos os endpoints retornam dados em formato JSON**
+- **As especialidades são ordenadas alfabeticamente por descrição**
+- **O limite máximo de resultados por requisição é 100**
+- **A busca é case-insensitive e parcial**
+- **Os dados são sincronizados da API externa, não criados manualmente**
+- **O campo `id` corresponde ao ID da API externa**
+- **O slug é gerado automaticamente a partir da descrição** 

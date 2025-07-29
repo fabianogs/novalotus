@@ -5,9 +5,6 @@
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
         <h1>Gerenciar Cidades</h1>
-        <a href="{{ route('cidades.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Nova Cidade
-        </a>
     </div>
 @stop
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cidade;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 
 class CidadeController extends Controller
 {
@@ -81,7 +82,8 @@ class CidadeController extends Controller
     {
         $request->validate([
             'nome' => 'required|string|max:255',
-            'uf' => 'required|string|size:2'
+            'uf' => 'required|string|size:2',
+            'nome_completo' => 'nullable|string|max:255'
         ], [
             'nome.required' => 'O nome da cidade é obrigatório.',
             'uf.required' => 'O estado (UF) é obrigatório.',
@@ -96,7 +98,8 @@ class CidadeController extends Controller
         $cidade->update([
             'nome' => $request->nome,
             'slug' => $slug,
-            'uf' => strtoupper($request->uf)
+            'uf' => strtoupper($request->uf),
+            'nome_completo' => $request->nome_completo
         ]);
 
         return redirect()->route('cidades.index')
@@ -139,11 +142,181 @@ class CidadeController extends Controller
         $cidades = Cidade::where('nome', 'LIKE', "%{$term}%")
                         ->orWhere('slug', 'LIKE', "%{$term}%")
                         ->orWhere('uf', 'LIKE', "%{$term}%")
+                        ->orWhere('nome_completo', 'LIKE', "%{$term}%")
                         ->orderBy('nome')
                         ->limit(10)
-                        ->get(['id', 'nome', 'uf', 'slug']);
+                        ->get(['id', 'nome', 'uf', 'slug', 'nome_completo']);
 
         return response()->json($cidades);
+    }
+
+    /**
+     * Sincronizar cidades da API
+     */
+    public function sync()
+    {
+        try {
+            \Artisan::call('cidades:sync');
+            $output = \Artisan::output();
+            
+            return redirect()->route('cidades.index')
+                            ->with('success', 'Sincronização de cidades iniciada com sucesso!');
+        } catch (\Exception $e) {
+            return redirect()->route('cidades.index')
+                            ->with('error', 'Erro ao sincronizar cidades: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Dashboard de sincronização
+     */
+    public function syncDashboard()
+    {
+        // Estatísticas locais
+        $totalLocal = Cidade::count();
+        $ultimaAtualizacao = Cidade::max('updated_at');
+        $cidadesHoje = Cidade::whereDate('updated_at', today())->count();
+        $cidadesSemana = Cidade::whereDate('updated_at', '>=', now()->subDays(7))->count();
+
+        // Verificar API externa
+        $apiStatus = $this->checkApiStatus();
+
+        // Logs recentes
+        $recentLogs = $this->getRecentSyncLogs();
+
+        $stats = [
+            'local' => [
+                'total' => $totalLocal,
+                'ultima_atualizacao' => $ultimaAtualizacao,
+                'atualizadas_hoje' => $cidadesHoje,
+                'atualizadas_semana' => $cidadesSemana,
+            ],
+            'api' => $apiStatus,
+            'logs' => $recentLogs,
+            'status' => $this->getOverallStatus($totalLocal, $apiStatus)
+        ];
+
+        return view('cidades.sync-dashboard', compact('stats'));
+    }
+
+    /**
+     * Executar sincronização via AJAX
+     */
+    public function syncAjax()
+    {
+        try {
+            $startTime = now();
+            
+            \Artisan::call('cidades:sync');
+            $output = \Artisan::output();
+            
+            $duration = now()->diffInSeconds($startTime);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Sincronização concluída com sucesso!',
+                'duration' => $duration,
+                'output' => $output
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao sincronizar: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Verificar status da API
+     */
+    private function checkApiStatus()
+    {
+        try {
+            $response = Http::timeout(10)->get('http://lotus-api.cloud.zielo.com.br/api/get_cidades_prestadores');
+            
+            if ($response->successful()) {
+                $data = $response->json();
+                return [
+                    'online' => true,
+                    'total' => $data['total_items'] ?? 'N/A',
+                    'pages' => $data['page_count'] ?? 'N/A',
+                    'error' => null
+                ];
+            } else {
+                return [
+                    'online' => false,
+                    'total' => 0,
+                    'pages' => 0,
+                    'error' => "HTTP {$response->status()}"
+                ];
+            }
+        } catch (\Exception $e) {
+            return [
+                'online' => false,
+                'total' => 0,
+                'pages' => 0,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Obter logs recentes de sincronização
+     */
+    private function getRecentSyncLogs()
+    {
+        $logFile = storage_path('logs/laravel.log');
+        
+        if (!file_exists($logFile)) {
+            return [];
+        }
+
+        $logs = [];
+        $lines = file($logFile);
+        $syncLines = [];
+
+        // Buscar linhas relacionadas à sincronização (últimas 100 linhas)
+        $recentLines = array_slice($lines, -100);
+        
+        foreach ($recentLines as $line) {
+            if (strpos($line, 'Sincronização') !== false || strpos($line, 'cidades') !== false) {
+                // Extrair timestamp do log (formato: [2024-01-01 12:00:00])
+                if (preg_match('/\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]/', $line, $matches)) {
+                    $timestamp = $matches[1];
+                    $syncLines[] = [
+                        'timestamp' => $timestamp,
+                        'message' => trim($line)
+                    ];
+                } else {
+                    $syncLines[] = [
+                        'timestamp' => now()->format('Y-m-d H:i:s'),
+                        'message' => trim($line)
+                    ];
+                }
+            }
+        }
+
+        return array_slice($syncLines, -10); // Últimas 10 linhas
+    }
+
+    /**
+     * Obter status geral
+     */
+    private function getOverallStatus($totalLocal, $apiStatus)
+    {
+        if (!$apiStatus['online']) {
+            return 'error';
+        }
+
+        if ($totalLocal == 0) {
+            return 'error';
+        }
+
+        if ($totalLocal < 5) {
+            return 'warning';
+        }
+
+        return 'ok';
     }
 
     /**

@@ -3,12 +3,7 @@
 @section('title', 'Especialistas')
 
 @section('content_header')
-    <div class="d-flex justify-content-between align-items-center">
-        <h1>Gerenciar Especialistas</h1>
-        <a href="{{ route('especialistas.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Novo Especialista
-        </a>
-    </div>
+    <h1>Gerenciar Especialistas</h1>
 @stop
 
 @section('content')
@@ -42,7 +37,7 @@
                         <th>Foto</th>
                         <th>Nome</th>
                         <th>Conselho</th>
-                        <th>Especialidade</th>
+                        <th>Especialidades</th>
                         <th>Cidade</th>
                         <th>Criado em</th>
                         <th>Ações</th>
@@ -72,8 +67,10 @@
                             @endif
                         </td>
                         <td>
-                            @if($especialista->especialidade)
-                                <span class="badge badge-primary">{{ $especialista->especialidade->nome }}</span>
+                            @if($especialista->especialidades->count() > 0)
+                                @foreach($especialista->especialidades as $especialidade)
+                                    <span class="badge badge-primary mr-1">{{ $especialidade->descricao }}</span>
+                                @endforeach
                             @else
                                 <span class="text-muted">Não informado</span>
                             @endif
@@ -88,6 +85,12 @@
                         <td>{{ $especialista->created_at->format('d/m/Y H:i') }}</td>
                         <td>
                             <div class="btn-group">
+                                <a href="{{ route('especialistas.show', $especialista->id) }}" 
+                                   class="btn btn-sm btn-info"
+                                   title="Visualizar especialista"
+                                   data-toggle="tooltip">
+                                    <i class="fas fa-eye"></i>
+                                </a>
                                 <a href="{{ route('especialistas.edit', $especialista->id) }}" 
                                    class="btn btn-sm btn-warning"
                                    title="Editar especialista"
@@ -165,6 +168,10 @@
         
         .img-thumbnail {
             border-radius: 50%;
+        }
+
+        .badge {
+            font-size: 0.75em;
         }
     </style>
 @stop

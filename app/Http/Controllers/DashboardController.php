@@ -37,7 +37,7 @@ class DashboardController extends Controller
 
         // Itens recentes
         $recentes = [
-            'especialistas' => Especialista::with(['especialidade', 'cidade'])
+            'especialistas' => Especialista::with(['especialidades', 'cidade'])
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get(),

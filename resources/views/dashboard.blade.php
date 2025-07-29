@@ -149,7 +149,12 @@
                                         <div class="flex-grow-1">
                                             <h6 class="mb-1">{{ $especialista->nome }}</h6>
                                             <small class="text-muted">
-                                                {{ $especialista->especialidade ? $especialista->especialidade->nome : 'Sem especialidade' }} - 
+                                                @if($especialista->especialidades->count() > 0)
+                                                    {{ $especialista->especialidades->pluck('descricao')->implode(', ') }}
+                                                @else
+                                                    Sem especialidade
+                                                @endif
+                                                - 
                                                 {{ $especialista->cidade ? $especialista->cidade->nome : 'Sem cidade' }}
                                             </small>
                                         </div>

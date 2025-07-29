@@ -17,7 +17,7 @@ class EspecialistaController extends Controller
      */
     public function index()
     {
-        $especialistas = Especialista::with(['especialidade', 'cidade', 'necessidade'])
+        $especialistas = Especialista::with(['especialidades', 'cidade', 'necessidade'])
                                    ->orderBy('nome', 'asc')
                                    ->get();
         
@@ -29,7 +29,7 @@ class EspecialistaController extends Controller
      */
     public function create()
     {
-        $especialidades = Especialidade::orderBy('nome', 'asc')->get();
+        $especialidades = Especialidade::orderBy('descricao', 'asc')->get();
         $cidades = Cidade::orderBy('nome', 'asc')->get();
         $necessidades = Necessidade::orderBy('titulo', 'asc')->get();
         
@@ -81,7 +81,8 @@ class EspecialistaController extends Controller
         $request->validate([
             'nome' => 'required|string|max:255',
             'conselho' => 'nullable|string|max:255',
-            'especialidade_id' => 'nullable|exists:especialidades,id',
+            'especialidades' => 'nullable|array',
+            'especialidades.*' => 'exists:especialidades,id',
             'cidade_id' => 'nullable|exists:cidades,id',
             'endereco' => 'nullable|string|max:500',
             'necessidade_id' => 'nullable|exists:necessidades,id',
@@ -91,7 +92,8 @@ class EspecialistaController extends Controller
             'nome.string' => 'O nome deve ser um texto válido.',
             'nome.max' => 'O nome deve ter no máximo 255 caracteres.',
             'conselho.max' => 'O conselho deve ter no máximo 255 caracteres.',
-            'especialidade_id.exists' => 'A especialidade selecionada não existe. Verifique se ela não foi removida.',
+            'especialidades.array' => 'As especialidades devem ser selecionadas corretamente.',
+            'especialidades.*.exists' => 'Uma das especialidades selecionadas não existe.',
             'cidade_id.exists' => 'A cidade selecionada não existe. Verifique se ela não foi removida.',
             'endereco.max' => 'O endereço deve ter no máximo 500 caracteres.',
             'necessidade_id.exists' => 'A necessidade selecionada não existe. Verifique se ela não foi removida.',
@@ -112,16 +114,20 @@ class EspecialistaController extends Controller
         $slug = $this->generateUniqueSlug($request->nome);
 
         // Criar o especialista
-        Especialista::create([
+        $especialista = Especialista::create([
             'nome' => $request->nome,
             'conselho' => $request->conselho,
-            'especialidade_id' => $request->especialidade_id,
             'cidade_id' => $request->cidade_id,
             'endereco' => $request->endereco,
             'necessidade_id' => $request->necessidade_id,
             'foto' => $fotoName,
             'slug' => $slug,
         ]);
+
+        // Associar especialidades
+        if ($request->has('especialidades')) {
+            $especialista->especialidades()->attach($request->especialidades);
+        }
 
         return redirect()->route('especialistas.index')
                         ->with('success', 'Especialista criado com sucesso!');
@@ -132,7 +138,7 @@ class EspecialistaController extends Controller
      */
     public function show(Especialista $especialista)
     {
-        $especialista->load(['especialidade', 'cidade', 'necessidade']);
+        $especialista->load(['especialidades', 'cidade', 'necessidade', 'enderecos', 'telefones']);
         return view('especialistas.show', compact('especialista'));
     }
 
@@ -141,9 +147,12 @@ class EspecialistaController extends Controller
      */
     public function edit(Especialista $especialista)
     {
-        $especialidades = Especialidade::orderBy('nome', 'asc')->get();
+        $especialidades = Especialidade::orderBy('descricao', 'asc')->get();
         $cidades = Cidade::orderBy('nome', 'asc')->get();
         $necessidades = Necessidade::orderBy('titulo', 'asc')->get();
+        
+        // Carregar especialidades do especialista
+        $especialista->load('especialidades');
         
         // Verificar se existem registros necessários
         $warnings = [];
@@ -193,7 +202,8 @@ class EspecialistaController extends Controller
         $request->validate([
             'nome' => 'required|string|max:255',
             'conselho' => 'nullable|string|max:255',
-            'especialidade_id' => 'nullable|exists:especialidades,id',
+            'especialidades' => 'nullable|array',
+            'especialidades.*' => 'exists:especialidades,id',
             'cidade_id' => 'nullable|exists:cidades,id',
             'endereco' => 'nullable|string|max:500',
             'necessidade_id' => 'nullable|exists:necessidades,id',
@@ -203,7 +213,8 @@ class EspecialistaController extends Controller
             'nome.string' => 'O nome deve ser um texto válido.',
             'nome.max' => 'O nome deve ter no máximo 255 caracteres.',
             'conselho.max' => 'O conselho deve ter no máximo 255 caracteres.',
-            'especialidade_id.exists' => 'A especialidade selecionada não existe. Verifique se ela não foi removida.',
+            'especialidades.array' => 'As especialidades devem ser selecionadas corretamente.',
+            'especialidades.*.exists' => 'Uma das especialidades selecionadas não existe.',
             'cidade_id.exists' => 'A cidade selecionada não existe. Verifique se ela não foi removida.',
             'endereco.max' => 'O endereço deve ter no máximo 500 caracteres.',
             'necessidade_id.exists' => 'A necessidade selecionada não existe. Verifique se ela não foi removida.',
@@ -233,13 +244,16 @@ class EspecialistaController extends Controller
         $especialista->update([
             'nome' => $request->nome,
             'conselho' => $request->conselho,
-            'especialidade_id' => $request->especialidade_id,
             'cidade_id' => $request->cidade_id,
             'endereco' => $request->endereco,
             'necessidade_id' => $request->necessidade_id,
             'foto' => $fotoName,
             'slug' => $slug,
         ]);
+
+        // Sincronizar especialidades
+        $especialidades = $request->has('especialidades') ? $request->especialidades : [];
+        $especialista->especialidades()->sync($especialidades);
 
         return redirect()->route('especialistas.index')
                         ->with('success', 'Especialista atualizado com sucesso!');
@@ -273,13 +287,13 @@ class EspecialistaController extends Controller
     {
         $term = $request->get('term');
         
-        $especialistas = Especialista::with(['especialidade', 'cidade'])
+        $especialistas = Especialista::with(['especialidades', 'cidade'])
                                    ->where('nome', 'LIKE', "%{$term}%")
                                    ->orWhere('conselho', 'LIKE', "%{$term}%")
                                    ->orWhere('slug', 'LIKE', "%{$term}%")
                                    ->orderBy('nome')
                                    ->limit(10)
-                                   ->get(['id', 'nome', 'conselho', 'slug', 'especialidade_id', 'cidade_id']);
+                                   ->get(['id', 'nome', 'conselho', 'slug', 'cidade_id']);
 
         return response()->json($especialistas);
     }
@@ -318,11 +332,14 @@ class EspecialistaController extends Controller
     {
         $errors = [];
 
-        // Verificar se a especialidade existe e está disponível
-        if ($request->filled('especialidade_id')) {
-            $especialidade = Especialidade::find($request->especialidade_id);
-            if (!$especialidade) {
-                $errors['especialidade_id'] = 'A especialidade selecionada não foi encontrada. Pode ter sido removida por outro usuário.';
+        // Verificar se as especialidades existem e estão disponíveis
+        if ($request->has('especialidades') && is_array($request->especialidades)) {
+            foreach ($request->especialidades as $especialidadeId) {
+                $especialidade = Especialidade::find($especialidadeId);
+                if (!$especialidade) {
+                    $errors['especialidades'] = 'Uma das especialidades selecionadas não foi encontrada. Pode ter sido removida por outro usuário.';
+                    break;
+                }
             }
         }
 

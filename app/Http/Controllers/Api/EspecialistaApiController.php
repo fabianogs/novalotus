@@ -26,13 +26,15 @@ class EspecialistaApiController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $query = Especialista::with(['especialidade', 'cidade', 'necessidade']);
+            $query = Especialista::with(['especialidades', 'cidade', 'necessidade']);
             
             // Filtro por especialidade
             if (request()->has('especialidade_id')) {
                 $especialidadeId = (int) request('especialidade_id');
                 if ($especialidadeId > 0) {
-                    $query->where('especialidade_id', $especialidadeId);
+                    $query->whereHas('especialidades', function($q) use ($especialidadeId) {
+                        $q->where('especialidades.id', $especialidadeId);
+                    });
                 }
             }
             
@@ -87,7 +89,7 @@ class EspecialistaApiController extends Controller
     public function show($id): JsonResponse
     {
         try {
-            $especialista = Especialista::with(['especialidade', 'cidade', 'necessidade'])->find($id);
+            $especialista = Especialista::with(['especialidades', 'cidade', 'necessidade'])->find($id);
             
             if (!$especialista) {
                 return $this->errorResponse('Especialista não encontrado', 404);
@@ -108,12 +110,22 @@ class EspecialistaApiController extends Controller
     public function byEspecialidade(): JsonResponse
     {
         try {
-            $especialistas = Especialista::with(['especialidade', 'cidade', 'necessidade'])
+            $especialistas = Especialista::with(['especialidades', 'cidade', 'necessidade'])
                 ->orderBy('nome', 'asc')
-                ->get()
-                ->groupBy('especialidade.nome');
+                ->get();
             
-            return $this->successResponse($especialistas, 'Especialistas agrupados por especialidade listados com sucesso');
+            // Agrupar por especialidades
+            $grouped = [];
+            foreach ($especialistas as $especialista) {
+                foreach ($especialista->especialidades as $especialidade) {
+                    if (!isset($grouped[$especialidade->nome])) {
+                        $grouped[$especialidade->nome] = [];
+                    }
+                    $grouped[$especialidade->nome][] = $especialista;
+                }
+            }
+            
+            return $this->successResponse($grouped, 'Especialistas agrupados por especialidade listados com sucesso');
             
         } catch (\Exception $e) {
             return $this->errorResponse('Erro interno do servidor', 500, $e->getMessage());
@@ -128,7 +140,7 @@ class EspecialistaApiController extends Controller
     public function byCidade(): JsonResponse
     {
         try {
-            $especialistas = Especialista::with(['especialidade', 'cidade', 'necessidade'])
+            $especialistas = Especialista::with(['especialidades', 'cidade', 'necessidade'])
                 ->orderBy('nome', 'asc')
                 ->get()
                 ->groupBy('cidade.nome');
@@ -149,7 +161,7 @@ class EspecialistaApiController extends Controller
     public function findBySlug($slug): JsonResponse
     {
         try {
-            $especialista = Especialista::with(['especialidade', 'cidade', 'necessidade'])
+            $especialista = Especialista::with(['especialidades', 'cidade', 'necessidade'])
                 ->where('slug', $slug)
                 ->first();
             

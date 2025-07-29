@@ -81,6 +81,27 @@
                                 </span>
                             @enderror
                         </div>
+
+                        <!-- Nome Completo -->
+                        <div class="form-group">
+                            <label for="nome_completo">Nome Completo</label>
+                            <input type="text" 
+                                   class="form-control @error('nome_completo') is-invalid @enderror" 
+                                   id="nome_completo" 
+                                   name="nome_completo" 
+                                   value="{{ old('nome_completo', $cidade->nome_completo) }}" 
+                                   placeholder="Ex: São Paulo - SP"
+                                   readonly>
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i> 
+                                Este campo é preenchido automaticamente pela sincronização da API
+                            </small>
+                            @error('nome_completo')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
                     </div>
                 </div>
             </div>

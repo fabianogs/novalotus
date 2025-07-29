@@ -5,9 +5,6 @@
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
         <h1>Gerenciar Especialidades</h1>
-        <a href="{{ route('especialidades.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Nova Especialidade
-        </a>
     </div>
 @stop
 
@@ -34,12 +31,19 @@
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">Lista de Especialidades</h3>
+            <div class="card-tools">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i> 
+                    As especialidades são sincronizadas automaticamente da API externa
+                </small>
+            </div>
         </div>
         <div class="card-body">
             <table id="especialidadesTable" class="table table-bordered table-striped">
                 <thead>
                     <tr>
-                        <th>Nome</th>
+                        <th>ID</th>
+                        <th>Descrição</th>
                         <th>Criado em</th>
                         <th>Ações</th>
                     </tr>
@@ -47,7 +51,8 @@
                 <tbody>
                     @foreach($especialidades as $especialidade)
                     <tr>
-                        <td>{{ $especialidade->nome }}</td>
+                        <td>{{ $especialidade->id }}</td>
+                        <td>{{ $especialidade->descricao }}</td>
                         <td>{{ $especialidade->created_at->format('d/m/Y H:i') }}</td>
                         <td>
                             <div class="btn-group">
@@ -59,7 +64,7 @@
                                 </a>
                                 <button type="button" 
                                         class="btn btn-sm btn-danger" 
-                                        onclick="openDeleteModal({{ $especialidade->id }}, '{{ $especialidade->nome }}')"
+                                        onclick="openDeleteModal({{ $especialidade->id }}, '{{ $especialidade->descricao }}')"
                                         title="Excluir especialidade"
                                         data-toggle="tooltip">
                                     <i class="fas fa-trash"></i>
@@ -148,9 +153,9 @@
                 },
                 responsive: true,
                 pageLength: 25,
-                order: [[0, 'asc']],
+                order: [[1, 'asc']],
                 columnDefs: [
-                    { orderable: false, targets: [2] }
+                    { orderable: false, targets: [3] }
                 ]
             });
 

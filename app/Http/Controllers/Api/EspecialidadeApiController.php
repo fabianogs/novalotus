@@ -28,11 +28,11 @@ class EspecialidadeApiController extends Controller
             // Busca por nome da especialidade
             if (request()->has('search')) {
                 $search = request('search');
-                $query->where('nome', 'LIKE', '%' . $search . '%');
+                $query->where('descricao', 'LIKE', '%' . $search . '%');
             }
             
-            // Ordenação alfabética por nome
-            $query->orderBy('nome', 'asc');
+            // Ordenação alfabética por descrição
+            $query->orderBy('descricao', 'asc');
             
             // Limite de resultados
             if (request()->has('limit')) {

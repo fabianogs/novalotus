@@ -113,7 +113,7 @@ return [
         'enabled' => true,
         'mode' => 'fullscreen',
         'img' => [
-            'path' => 'img/logo2.png',
+            'path' => 'img/favicon.png',
             'alt' => 'Nova Lótus',
             'effect' => 'animation__shake',
             'width' => 60,
@@ -310,6 +310,11 @@ return [
             'text' => 'Dashboard',
             'url' => 'dashboard',
             'icon' => 'fas fa-fw fa-tachometer-alt',
+        ],
+        [
+            'text' => 'Sincronizações',
+            'url' => 'sync-dashboard',
+            'icon' => 'fas fa-fw fa-sync-alt',
         ],
         ['header' => 'PRINCIPAIS'],
             [
