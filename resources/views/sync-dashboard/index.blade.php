@@ -264,7 +264,7 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">
-                    <i class="fas fa-list"></i> Logs Recentes de Sincronização
+                    <i class="fas fa-history"></i> Logs Recentes de Sincronização
                 </h3>
             </div>
             <div class="card-body">
@@ -274,19 +274,47 @@
                             <thead>
                                 <tr>
                                     <th>Data/Hora</th>
-                                    <th>Mensagem</th>
-                                    <th>Tempo</th>
+                                    <th>Entidade</th>
+                                    <th>Status</th>
+                                    <th>Duração</th>
+                                    <th>Detalhes</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($recentLogs as $log)
-                                <tr>
-                                    <td>{{ $log['timestamp'] }}</td>
-                                    <td>{{ $log['message'] }}</td>
-                                    <td>
-                                        <small class="text-muted">{{ $log['time_ago'] }}</small>
-                                    </td>
-                                </tr>
+                                    <tr>
+                                        <td>{{ $log['timestamp'] }}</td>
+                                        <td>
+                                            <span class="badge badge-info">
+                                                {{ ucfirst($log['entity']) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if($log['status'] === 'success')
+                                                <span class="badge badge-success">
+                                                    <i class="fas fa-check"></i> Sucesso
+                                                </span>
+                                            @elseif($log['status'] === 'error')
+                                                <span class="badge badge-danger">
+                                                    <i class="fas fa-times"></i> Erro
+                                                </span>
+                                            @elseif($log['status'] === 'partial')
+                                                <span class="badge badge-warning">
+                                                    <i class="fas fa-exclamation-triangle"></i> Parcial
+                                                </span>
+                                            @elseif($log['status'] === 'running')
+                                                <span class="badge badge-info">
+                                                    <i class="fas fa-spinner fa-spin"></i> Executando
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $log['duration'] }}</td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ $log['message'] }}
+                                            </small>
+                                        </td>
+                                    </tr>
                                 @endforeach
                             </tbody>
                         </table>

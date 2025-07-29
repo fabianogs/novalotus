@@ -242,42 +242,55 @@ class SyncDashboardController extends Controller
     }
 
     /**
-     * Get recent sync logs.
+     * Obter logs recentes de sincronização
      */
     private function getRecentSyncLogs()
     {
-        $logFile = storage_path('logs/laravel.log');
-        
-        if (!file_exists($logFile)) {
+        try {
+            $logs = \App\Models\SyncLog::orderBy('started_at', 'desc')
+                ->limit(10)
+                ->get();
+
+            $formattedLogs = [];
+            
+            foreach ($logs as $log) {
+                $statusIcon = match($log->status) {
+                    'success' => '✅',
+                    'error' => '❌',
+                    'partial' => '⚠️',
+                    'running' => '🔄',
+                    default => '❓'
+                };
+
+                $message = "{$statusIcon} Sincronização de " . ucfirst($log->entity);
+                
+                if ($log->status === 'success') {
+                    $message .= " concluída";
+                    if ($log->created_items > 0 || $log->updated_items > 0) {
+                        $message .= " ({$log->summary})";
+                    }
+                } elseif ($log->status === 'error') {
+                    $message .= " falhou: " . ($log->error_message ?: 'Erro desconhecido');
+                } elseif ($log->status === 'partial') {
+                    $message .= " parcialmente concluída";
+                } elseif ($log->status === 'running') {
+                    $message .= " em andamento";
+                }
+
+                $formattedLogs[] = [
+                    'timestamp' => $log->started_at->format('d/m/Y H:i:s'),
+                    'message' => $message,
+                    'duration' => $log->duration_formatted,
+                    'entity' => $log->entity,
+                    'status' => $log->status
+                ];
+            }
+
+            return $formattedLogs;
+            
+        } catch (\Exception $e) {
+            Log::error('Erro ao buscar logs de sincronização: ' . $e->getMessage());
             return [];
         }
-
-        $logs = [];
-        $lines = file($logFile);
-        $recentLines = array_slice($lines, -100); // Últimas 100 linhas
-
-        foreach ($recentLines as $line) {
-            if (preg_match('/\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\] .*?: (.*)/', $line, $matches)) {
-                $timestamp = $matches[1];
-                $message = trim($matches[2]);
-                
-                // Filtrar apenas logs relacionados a sincronização
-                if (strpos($message, 'sincronização') !== false || 
-                    strpos($message, 'sync') !== false ||
-                    strpos($message, 'especialidades') !== false ||
-                    strpos($message, 'cidades') !== false ||
-                    strpos($message, 'especialistas') !== false) {
-                    
-                    $logs[] = [
-                        'timestamp' => $timestamp,
-                        'message' => $message,
-                        'time_ago' => \Carbon\Carbon::parse($timestamp)->diffForHumans()
-                    ];
-                }
-            }
-        }
-
-        // Retornar apenas os últimos 10 logs
-        return array_slice(array_reverse($logs), 0, 10);
     }
 }

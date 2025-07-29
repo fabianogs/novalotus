@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cidade;
+use Illuminate\Http\Request;
 use App\Traits\ApiResponse;
-use Illuminate\Http\JsonResponse;
 
 class CidadeApiController extends Controller
 {

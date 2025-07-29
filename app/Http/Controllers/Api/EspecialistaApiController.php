@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Especialista;
+use App\Models\Especialidade;
+use App\Models\Cidade;
+use App\Models\Necessidade;
+use Illuminate\Http\Request;
 use App\Traits\ApiResponse;
-use Illuminate\Http\JsonResponse;
 
 class EspecialistaApiController extends Controller
 {

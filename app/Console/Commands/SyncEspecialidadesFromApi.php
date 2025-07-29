@@ -6,15 +6,18 @@ use App\Models\Especialidade;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use App\Traits\SyncLoggable;
 
 class SyncEspecialidadesFromApi extends Command
 {
+    use SyncLoggable;
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'especialidades:sync {--force : Força a sincronização mesmo se já existir}';
+    protected $signature = 'especialidades:sync';
 
     /**
      * The console command description.
@@ -28,33 +31,36 @@ class SyncEspecialidadesFromApi extends Command
      */
     public function handle()
     {
-        $this->info('Iniciando sincronização de especialidades...');
-
-        $apiUrl = 'http://lotus-api.cloud.zielo.com.br/api/get_especialidades';
-        $page = 1;
-        $totalSynced = 0;
-        $totalUpdated = 0;
-        $totalErrors = 0;
-
+        $this->startSyncLog('especialidades');
+        
         try {
+            $this->info('Iniciando sincronização de especialidades...');
+            
+            $page = 1;
+            $totalProcessed = 0;
+            
             do {
                 $this->info("Processando página {$page}...");
-
-                $response = Http::timeout(30)->get($apiUrl, ['page' => $page]);
+                
+                $response = Http::get('http://lotus-api.cloud.zielo.com.br/api/get_especialidades', [
+                    'page' => $page
+                ]);
                 
                 if (!$response->successful()) {
-                    $this->error("Erro ao acessar a API: " . $response->status());
+                    $errorMessage = "Erro ao acessar API: " . $response->status();
+                    $this->error($errorMessage);
+                    $this->finishSyncLogError($errorMessage);
                     return 1;
                 }
-
-                $data = $response->json();
                 
-                if (!isset($data['itens']) || !is_array($data['itens'])) {
-                    $this->error('Formato de resposta inválido da API');
-                    return 1;
+                $data = $response->json();
+                $items = $data['itens'] ?? [];
+                
+                if (empty($items)) {
+                    break;
                 }
-
-                foreach ($data['itens'] as $item) {
+                
+                foreach ($items as $item) {
                     try {
                         $especialidade = Especialidade::updateOrCreate(
                             ['id' => $item['id']],
@@ -63,40 +69,41 @@ class SyncEspecialidadesFromApi extends Command
                                 'slug' => Str::slug($item['descricao']),
                             ]
                         );
-
+                        
                         if ($especialidade->wasRecentlyCreated) {
-                            $totalSynced++;
-                            $this->line("✓ Criada: {$item['descricao']}");
+                            $this->line("✓ Criado: {$item['descricao']}");
+                            $this->incrementCreatedItems();
                         } else {
-                            $totalUpdated++;
-                            $this->line("✓ Atualizada: {$item['descricao']}");
+                            $this->line("✓ Atualizado: {$item['descricao']}");
+                            $this->incrementUpdatedItems();
                         }
-
+                        
+                        $totalProcessed++;
+                        
                     } catch (\Exception $e) {
-                        $totalErrors++;
-                        $this->error("✗ Erro ao processar {$item['descricao']}: " . $e->getMessage());
+                        $this->error("✗ Erro ao processar especialidade {$item['descricao']}: " . $e->getMessage());
+                        $this->incrementErrorItems();
                     }
                 }
-
-                // Verificar se há próxima página
-                $hasNextPage = isset($data['links']['next']) && $data['links']['next'] !== null;
+                
                 $page++;
-
-            } while ($hasNextPage);
-
-            $this->newLine();
-            $this->info("Sincronização concluída!");
-            $this->info("Total criadas: {$totalSynced}");
-            $this->info("Total atualizadas: {$totalUpdated}");
+                
+            } while (isset($data['links']['next']));
             
-            if ($totalErrors > 0) {
-                $this->warn("Total de erros: {$totalErrors}");
-            }
-
+            $this->addSyncDetail('total_pages', $page - 1);
+            $this->addSyncDetail('api_url', 'http://lotus-api.cloud.zielo.com.br/api/get_especialidades');
+            
+            $this->info("Sincronização concluída!");
+            $this->info("Total processado: {$totalProcessed}");
+            
+            $this->finishSyncLogSuccess("Sincronização concluída com {$totalProcessed} especialidades processadas");
+            
             return 0;
-
+            
         } catch (\Exception $e) {
-            $this->error("Erro durante a sincronização: " . $e->getMessage());
+            $errorMessage = "Erro durante a sincronização: " . $e->getMessage();
+            $this->error($errorMessage);
+            $this->finishSyncLogError($errorMessage, $e);
             return 1;
         }
     }

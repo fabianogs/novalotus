@@ -3,15 +3,18 @@
 namespace App\Console\Commands;
 
 use App\Models\Especialista;
+use App\Models\Especialidade;
 use App\Models\Endereco;
 use App\Models\Telefone;
-use App\Models\Especialidade;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use App\Traits\SyncLoggable;
 
 class SyncEspecialistasFromApi extends Command
 {
+    use SyncLoggable;
+
     /**
      * The name and signature of the console command.
      *
@@ -24,133 +27,122 @@ class SyncEspecialistasFromApi extends Command
      *
      * @var string
      */
-    protected $description = 'Sincronizar especialistas da API externa';
+    protected $description = 'Sincroniza especialistas da API externa';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $this->info('Iniciando sincronização de especialistas...');
-
-        $page = 1;
-        $totalCriados = 0;
-        $totalAtualizados = 0;
-
-        do {
-            $this->info("Processando página {$page}...");
-
-            try {
-                $response = Http::timeout(30)->get('http://lotus-api.cloud.zielo.com.br/api/get_credenciados', [
+        $this->startSyncLog('especialistas');
+        
+        try {
+            $this->info('Iniciando sincronização de especialistas...');
+            
+            $page = 1;
+            $totalProcessed = 0;
+            
+            do {
+                $this->info("Processando página {$page}...");
+                
+                $response = Http::get('http://lotus-api.cloud.zielo.com.br/api/get_credenciados', [
                     'page' => $page
                 ]);
-
+                
                 if (!$response->successful()) {
-                    $this->error("Erro ao acessar a API: HTTP {$response->status()}");
+                    $errorMessage = "Erro ao acessar API: " . $response->status();
+                    $this->error($errorMessage);
+                    $this->finishSyncLogError($errorMessage);
                     return 1;
                 }
-
-                $data = $response->json();
-                $especialistas = $data['itens'] ?? [];
-
-                if (empty($especialistas)) {
-                    $this->warn("Nenhum especialista encontrado na página {$page}");
-                    break;
-                }
-
-                foreach ($especialistas as $especialistaData) {
-                    $this->processarEspecialista($especialistaData, $totalCriados, $totalAtualizados);
-                }
-
-                // Verificar se há próxima página
-                $links = $data['links'] ?? [];
-                $nextLink = $links['next'] ?? null;
                 
-                if (!$nextLink) {
+                $data = $response->json();
+                $items = $data['itens'] ?? [];
+                
+                if (empty($items)) {
                     break;
                 }
-
+                
+                foreach ($items as $item) {
+                    try {
+                        $especialista = $this->processarEspecialista($item);
+                        
+                        if ($especialista) {
+                            $this->processarEnderecos($especialista, $item['enderecos'] ?? []);
+                            $this->processarTelefones($especialista, $item['telefones'] ?? []);
+                            $this->processarEspecialidades($especialista, $item['especialidades'] ?? []);
+                            
+                            $totalProcessed++;
+                        }
+                        
+                    } catch (\Exception $e) {
+                        $nome = $item['nome'] ?? 'Desconhecido';
+                        $this->error("✗ Erro ao processar especialista {$nome}: " . $e->getMessage());
+                        $this->incrementErrorItems();
+                    }
+                }
+                
                 $page++;
-
-            } catch (\Exception $e) {
-                $this->error("Erro ao processar página {$page}: " . $e->getMessage());
-                return 1;
-            }
-
-        } while (true);
-
-        $this->info('');
-        $this->info('Sincronização concluída!');
-        $this->info("Total criados: {$totalCriados}");
-        $this->info("Total atualizados: {$totalAtualizados}");
-
-        return 0;
+                
+            } while (isset($data['links']['next']));
+            
+            $this->addSyncDetail('total_pages', $page - 1);
+            $this->addSyncDetail('api_url', 'http://lotus-api.cloud.zielo.com.br/api/get_credenciados');
+            
+            $this->info("Sincronização concluída!");
+            $this->info("Total processado: {$totalProcessed}");
+            
+            $this->finishSyncLogSuccess("Sincronização concluída com {$totalProcessed} especialistas processados");
+            
+            return 0;
+            
+        } catch (\Exception $e) {
+            $errorMessage = "Erro durante a sincronização: " . $e->getMessage();
+            $this->error($errorMessage);
+            $this->finishSyncLogError($errorMessage, $e);
+            return 1;
+        }
     }
 
     /**
-     * Processar um especialista individual
+     * Processar dados do especialista
      */
-    private function processarEspecialista($data, &$totalCriados, &$totalAtualizados)
+    private function processarEspecialista($data)
     {
-        $nome = $data['nome'] ?? '';
-        $nomeFantasia = $data['nome_fantasia'] ?? '';
-        $conselho = $data['conselho'] ?? '';
-        $registro = $data['registro'] ?? '';
-        $registroUf = $data['registro_uf'] ?? '';
-
-        if (empty($nome)) {
-            $this->warn("Especialista com nome vazio: ID {$data['id']}");
-            return;
-        }
-
-        // Gerar slug baseado no nome
-        $slug = Str::slug($nome);
-
-        // Criar ou atualizar especialista
         $especialista = Especialista::updateOrCreate(
+            ['nome' => $data['nome']],
             [
-                'nome' => $nome,
-                'conselho' => $conselho,
-                'registro' => $registro
-            ],
-            [
-                'nome_fantasia' => $nomeFantasia,
-                'registro_uf' => $registroUf,
-                'slug' => $slug,
+                'nome_fantasia' => $data['nome_fantasia'] ?? null,
+                'conselho' => $data['conselho'] ?? null,
+                'registro' => $data['registro'] ?? null,
+                'registro_uf' => $data['registro_uf'] ?? null,
                 'cidade_id' => null,
+                'endereco' => $data['endereco'] ?? null,
                 'necessidade_id' => null,
-                'endereco' => null,
-                'foto' => null
+                'slug' => Str::slug($data['nome']),
             ]
         );
-
-        // Processar endereços
-        $this->processarEnderecos($especialista, $data['enderecos'] ?? []);
-
-        // Processar telefones
-        $this->processarTelefones($especialista, $data['telefones'] ?? []);
-
-        // Processar especialidades
-        $this->processarEspecialidades($especialista, $data['especialidades'] ?? []);
-
+        
         if ($especialista->wasRecentlyCreated) {
-            $totalCriados++;
-            $this->line("✓ Criado: {$nome}");
+            $this->line("✓ Criado: {$data['nome']}");
+            $this->incrementCreatedItems();
         } else {
-            $totalAtualizados++;
-            $this->line("✓ Atualizado: {$nome}");
+            $this->line("✓ Atualizado: {$data['nome']}");
+            $this->incrementUpdatedItems();
         }
+        
+        return $especialista;
     }
 
     /**
      * Processar endereços do especialista
      */
-    private function processarEnderecos($especialista, $enderecosData)
+    private function processarEnderecos($especialista, $enderecos)
     {
-        // Limpar endereços existentes
+        // Remover endereços existentes
         $especialista->enderecos()->delete();
-
-        foreach ($enderecosData as $enderecoData) {
+        
+        foreach ($enderecos as $enderecoData) {
             Endereco::create([
                 'especialista_id' => $especialista->id,
                 'uf' => $enderecoData['uf'] ?? null,
@@ -167,15 +159,15 @@ class SyncEspecialistasFromApi extends Command
     /**
      * Processar telefones do especialista
      */
-    private function processarTelefones($especialista, $telefonesData)
+    private function processarTelefones($especialista, $telefones)
     {
-        // Limpar telefones existentes
+        // Remover telefones existentes
         $especialista->telefones()->delete();
-
-        foreach ($telefonesData as $telefoneData) {
+        
+        foreach ($telefones as $telefoneData) {
             Telefone::create([
                 'especialista_id' => $especialista->id,
-                'numero' => $telefoneData['numero'] ?? '',
+                'numero' => $telefoneData['numero'] ?? null,
                 'observacao' => $telefoneData['observacao'] ?? null,
             ]);
         }
@@ -184,26 +176,17 @@ class SyncEspecialistasFromApi extends Command
     /**
      * Processar especialidades do especialista
      */
-    private function processarEspecialidades($especialista, $especialidadesData)
+    private function processarEspecialidades($especialista, $especialidades)
     {
         $especialidadeIds = [];
-
-        foreach ($especialidadesData as $especialidadeData) {
-            $especialidadeId = $especialidadeData['especialidade_id'] ?? null;
-            
-            if ($especialidadeId) {
-                // Buscar especialidade pelo ID da API
-                $especialidade = Especialidade::where('id', $especialidadeId)->first();
-                
-                if ($especialidade) {
-                    $especialidadeIds[] = $especialidade->id;
-                } else {
-                    $this->warn("Especialidade não encontrada: ID {$especialidadeId} - {$especialidadeData['descricao']}");
-                }
+        
+        foreach ($especialidades as $especialidadeData) {
+            $especialidade = Especialidade::find($especialidadeData['especialidade_id']);
+            if ($especialidade) {
+                $especialidadeIds[] = $especialidade->id;
             }
         }
-
-        // Sincronizar especialidades
+        
         $especialista->especialidades()->sync($especialidadeIds);
     }
 }
