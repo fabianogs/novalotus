@@ -64,7 +64,7 @@ return [
     */
 
     'logo' => '',
-    'logo_img' => 'img/logo2.png',
+    'logo_img' => 'img/Horizontal_Branca.png',
     'logo_img_class' => '',
     'logo_img_xl' => null,
     'logo_img_xl_class' => 'brand-image-xs',
